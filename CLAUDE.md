@@ -151,11 +151,62 @@ category (Indian SMB cash book). Key takeaways:
 - "MCP Connection settings" = a normal integrations settings page, not a
   literal Model Context Protocol server connection.
 
-## Status
+## Status (2026-09-16)
 
-Planning complete for the items above. Build has **not started yet** — the
-user has more requirements to share before implementation begins. Do not
-scaffold the Next.js project until the user explicitly says to start building.
+Build is underway. Everything below compiles (`npm run build` passes,
+`npx tsc --noEmit` clean, `npm test` passes) but **nothing has been run
+against a real database yet** — see "Next steps".
+
+Done:
+- Next.js 16 + React 19 + Tailwind v4 + TypeScript, Liquid Glass design
+  system in `src/app/globals.css` (glass utilities, light/dark tokens).
+- Supabase auth (email/password), session refresh in `src/middleware.ts`.
+- Schema in `supabase/migrations/` — 0001 tables + RLS, 0002 balance views
+  and summary functions, 0003 document numbering + payment sync trigger.
+- Company → Brands structure, brand switcher, brand creation with seeded
+  default accounts/categories/payment modes.
+- Cash book ledger: filters, pagination, summary, entry add/edit/delete,
+  inline party/category/mode creation, Excel export.
+- Dashboard with 30-day cash flow chart, receivable/payable, unpaid invoices.
+- Parties list + party statement page. Items catalog.
+- Quotations & invoices: editor with GST/non-GST toggle, auto intra/inter
+  state detection, line items, totals, print-ready view, payment recording
+  that also posts the cash book entry, quotation → invoice conversion.
+- Reports: P&L, cash flow, outstanding, GST summary, multi-sheet Excel export.
+- Settings: brand profile, accounts, categories, payment modes, and the
+  email auto-capture setup screen.
+- Inter-brand fund transfers (paired linked entries) and an all-brands
+  overview.
+- Bank alert email parser (`src/lib/bank-parser.ts`) + inbound webhook at
+  `/api/inbound`, with tests in `tests/bank-parser.test.mts` covering HDFC,
+  SBI, ICICI, Axis, Kotak formats and promotional-mail rejection.
+
+## Next steps
+
+1. **User creates a Supabase project** (free tier) and provides Project URL,
+   anon key, and service_role key. Put them in `.env.local` (see
+   `.env.example`).
+2. Apply `supabase/migrations/*.sql` in order via the Supabase SQL editor.
+3. Run `npm run dev`, sign up (first signup becomes the company owner and
+   creates the company row), create brands, and walk every screen.
+4. Connect the repo to Vercel for instant deploy; add the same env vars there.
+5. Set up inbound email (Cloudflare Email Workers / Postmark / Mailgun) to
+   POST to `/api/inbound` with the `x-webhook-secret` header, then walk the
+   user through the Gmail forwarding filter.
+
+Not built yet: user/team management UI (invite, roles, per-brand permission
+toggles), receipt/bill photo upload to Supabase Storage, purchase bills
+screen, statement (PDF/CSV) upload fallback importer, and a review queue UI
+for `needs_review` auto-imported entries.
+
+## Environment notes
+
+The project lives on an SMB network share (`/Volumes/BackUp`), which matters:
+- Turbopack's persistent cache cannot fsync there, so `.next/cache` is a
+  symlink to `~/.dot-cashbook-cache`. If `.next` is ever deleted, recreate it:
+  `mkdir -p .next && ln -sfn ~/.dot-cashbook-cache .next/cache`.
+- `node_modules` must be a real directory in the project (npm replaces a
+  symlink), so installs are slow but correct.
 
 ## Working agreement
 

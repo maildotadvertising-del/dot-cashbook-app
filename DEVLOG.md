@@ -2,6 +2,20 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-16 (build session)
+
+- Build started and the first full pass landed: scaffold, design system,
+  auth, schema + RLS, cash book, dashboard, parties, items, quotations and
+  invoices (GST and non-GST), reports, settings, inter-brand transfers,
+  all-brands overview, and the bank alert email parser with its webhook.
+  `npm run build`, `npx tsc --noEmit`, and `npm test` all pass.
+- Stopped short of running against a live database — the user will create
+  the Supabase project next session. CLAUDE.md "Next steps" has the exact
+  sequence to resume from.
+- Environment gotchas found and worked around (both recorded in CLAUDE.md):
+  the project sits on an SMB share, so Turbopack's cache had to move to a
+  local symlinked directory, and node_modules cannot be symlinked away.
+
 ## 2026-09-16
 
 - UPI auto-capture upgraded from manual statement upload to **bank alert
