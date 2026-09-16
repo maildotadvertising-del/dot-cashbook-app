@@ -1,0 +1,337 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ tokens */
+
+:root {
+  --bg-base: #eef1f7;
+  --bg-tint-a: #c9d8ff;
+  --bg-tint-b: #ffd9ec;
+  --bg-tint-c: #cdf3e6;
+
+  --fg: #10131a;
+  --fg-muted: #5d6475;
+  --fg-subtle: #878ea1;
+
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-bg-hover: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-edge: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 10px 34px -12px rgba(20, 26, 48, 0.28);
+  --glass-shadow-lg: 0 26px 64px -20px rgba(20, 26, 48, 0.4);
+
+  --accent: #2f6bff;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(47, 107, 255, 0.12);
+
+  --in: #0a9d63;
+  --in-soft: rgba(10, 157, 99, 0.13);
+  --out: #e0344a;
+  --out-soft: rgba(224, 52, 74, 0.13);
+  --warn: #c77800;
+
+  --hairline: rgba(16, 19, 26, 0.09);
+  --radius: 22px;
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --bg-base: #0a0c12;
+    --bg-tint-a: #1d2c5c;
+    --bg-tint-b: #4a1f3c;
+    --bg-tint-c: #103a33;
+
+    --fg: #f2f4f9;
+    --fg-muted: #a2a9bd;
+    --fg-subtle: #757d92;
+
+    --glass-bg: rgba(30, 34, 46, 0.6);
+    --glass-bg-strong: rgba(32, 36, 49, 0.84);
+    --glass-bg-hover: rgba(42, 47, 62, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.11);
+    --glass-edge: rgba(255, 255, 255, 0.22);
+    --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
+    --glass-shadow-lg: 0 26px 64px -20px rgba(0, 0, 0, 0.8);
+
+    --accent: #5b8bff;
+    --accent-soft: rgba(91, 139, 255, 0.18);
+
+    --in: #2ecb8b;
+    --in-soft: rgba(46, 203, 139, 0.16);
+    --out: #ff6b7e;
+    --out-soft: rgba(255, 107, 126, 0.16);
+    --warn: #f0a93a;
+
+    --hairline: rgba(255, 255, 255, 0.09);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-base: #0a0c12;
+  --bg-tint-a: #1d2c5c;
+  --bg-tint-b: #4a1f3c;
+  --bg-tint-c: #103a33;
+
+  --fg: #f2f4f9;
+  --fg-muted: #a2a9bd;
+  --fg-subtle: #757d92;
+
+  --glass-bg: rgba(30, 34, 46, 0.6);
+  --glass-bg-strong: rgba(32, 36, 49, 0.84);
+  --glass-bg-hover: rgba(42, 47, 62, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --glass-edge: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
+  --glass-shadow-lg: 0 26px 64px -20px rgba(0, 0, 0, 0.8);
+
+  --accent: #5b8bff;
+  --accent-soft: rgba(91, 139, 255, 0.18);
+
+  --in: #2ecb8b;
+  --in-soft: rgba(46, 203, 139, 0.16);
+  --out: #ff6b7e;
+  --out-soft: rgba(255, 107, 126, 0.16);
+  --warn: #f0a93a;
+
+  --hairline: rgba(255, 255, 255, 0.09);
+}
+
+@theme inline {
+  --color-bg: var(--bg-base);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-in: var(--in);
+  --color-in-soft: var(--in-soft);
+  --color-out: var(--out);
+  --color-out-soft: var(--out-soft);
+  --color-warn: var(--warn);
+  --color-hairline: var(--hairline);
+  --color-glass-border: var(--glass-border);
+  --radius-glass: var(--radius);
+  --font-sans: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+}
+
+/* -------------------------------------------------------------------- base */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(58% 48% at 12% 8%, var(--bg-tint-a) 0%, transparent 62%),
+    radial-gradient(52% 44% at 92% 4%, var(--bg-tint-b) 0%, transparent 60%),
+    radial-gradient(60% 52% at 78% 96%, var(--bg-tint-c) 0%, transparent 62%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* ------------------------------------------------------------ glass layers */
+
+/* The core Liquid Glass surface: blurred backdrop, a bright specular top
+   edge, and a soft shadow so the pane reads as floating above the content. */
+@utility glass {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 0 var(--glass-edge);
+}
+
+@utility glass-strong {
+  position: relative;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(34px) saturate(190%);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow-lg),
+    inset 0 1px 0 0 var(--glass-edge);
+}
+
+@utility glass-hover {
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+
+  &:hover {
+    background: var(--glass-bg-hover);
+  }
+}
+
+@utility card {
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+@utility hairline {
+  border-color: var(--hairline);
+}
+
+/* --------------------------------------------------------------- controls */
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.625rem 1.15rem;
+  font-size: 0.925rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-accent {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.07);
+  }
+}
+
+@utility btn-in {
+  background: var(--in);
+  color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--in) 80%, transparent);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.07);
+  }
+}
+
+@utility btn-out {
+  background: var(--out);
+  color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--out) 80%, transparent);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.07);
+  }
+}
+
+@utility btn-ghost {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  color: var(--fg);
+
+  &:hover:not(:disabled) {
+    background: var(--glass-bg-hover);
+  }
+}
+
+@utility field {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--glass-bg-strong) 85%, transparent);
+  padding: 0.625rem 0.85rem;
+  font-size: 0.95rem;
+  color: var(--fg);
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+
+  &::placeholder {
+    color: var(--fg-subtle);
+  }
+
+  &:focus {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+}
+
+@utility pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Tabular figures keep money columns from jittering as values change. */
+@utility money {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility rise {
+  animation: rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------------------------------------------------------------- scrolling */
+
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--fg-subtle) 42%, transparent);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ------------------------------------------------------------------- print */
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
