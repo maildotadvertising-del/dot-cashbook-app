@@ -8,8 +8,10 @@ See [DEVLOG.md](./DEVLOG.md) for the dated session-by-session history.
 
 ## What this is
 
-A full bookkeeping cash book web app for DOT Advertising, replacing manual
-cash book registers. Multi-user, GST-aware, works on mobile/tablet/web.
+A full bookkeeping cash book web app for **Zeebas Cluster LLP**, replacing
+manual cash book registers. The company has **multiple brands** under it
+(DOT Advertising is one); the app is multi-brand from the ground up, not
+single-business. Multi-user, GST-aware, works on mobile/tablet/web.
 
 ## Confirmed decisions
 
@@ -18,6 +20,10 @@ cash book registers. Multi-user, GST-aware, works on mobile/tablet/web.
 - **Platform:** Web app (responsive — mobile, tablet, desktop). No native app.
 - **Auth:** Multi-user login. Roles: Admin (full access), Staff (limited —
   entry only, no delete/reports).
+- **Structure:** Company (Zeebas Cluster LLP) → multiple Brands. Each brand
+  is its own independent cash book (own accounts, parties, categories,
+  invoices, reports). Company Admin sees/manages all brands; staff can be
+  scoped to specific brand(s).
 - **Tech stack:** Next.js 14 (App Router) + TypeScript + Tailwind CSS +
   shadcn/ui + Supabase (Postgres DB + Auth + Storage for receipts) + Recharts
   for dashboard charts.
@@ -31,35 +37,44 @@ cash book registers. Multi-user, GST-aware, works on mobile/tablet/web.
 
 ## Feature list (confirmed)
 
-1. **Auth & Users** — Supabase Auth, Admin/Staff roles, one workspace per
-   business, multiple staff can log in and see shared data.
-2. **Dashboard** — cash balance, bank balance, total receivables/payables,
+1. **Auth & Users** — Supabase Auth, Admin/Staff roles, multiple staff can
+   log in and see shared data within their scoped brand(s).
+2. **Multi-Brand & Fund Transfer** — one Company account (Zeebas Cluster
+   LLP) holds multiple Brands, each an independent cash book. Company Admin
+   has cross-brand access; staff can be scoped to one or more brands.
+   **Inter-brand fund transfer**: a dedicated transaction type to move money
+   from one brand to another — creates a linked paired entry in both brands'
+   ledgers automatically (Cash Out - Transfer to [Brand B] in Brand A's
+   book, Cash In - Transfer from [Brand A] in Brand B's book), so both
+   ledgers stay accurate and traceable to each other.
+3. **Dashboard** — cash balance, bank balance, total receivables/payables,
    income vs expense chart, recent transactions, low-balance/overdue alerts.
-3. **Accounts (cash book core)** — multiple accounts (Cash, Bank(s), Petty
-   Cash), Receipt/Payment/Contra entries, running balance, date-wise ledger,
-   attach receipt/bill photo to entries.
-4. **Parties (customers & suppliers)** — contacts with opening balance,
+4. **Accounts (cash book core)** — multiple accounts (Cash, Bank(s), Petty
+   Cash) per brand, Receipt/Payment/Contra entries, running balance,
+   date-wise ledger, attach receipt/bill photo to entries.
+5. **Parties (customers & suppliers)** — contacts with opening balance,
    party-wise ledger/statement, outstanding receivables/payables with due
    dates.
-5. **Products/Services catalog** — business items to attach to
+6. **Products/Services catalog** — business items to attach to
    quotations/invoices.
-6. **Quotations & Invoices** — create quotations, convert to GST invoices
+7. **Quotations & Invoices** — create quotations, convert to GST invoices
    (CGST/SGST/IGST calc, auto invoice numbering) **or** non-GST invoices
    (toggle per invoice) — record purchase bills from suppliers, mark
    Paid/Partial/Unpaid, PDF generation & share.
-7. **Categories & transactions** — custom income/expense categories, search
+8. **Categories & transactions** — custom income/expense categories, search
    and filter by date/party/category/account.
-8. **UPI/bank auto-capture (semi-automatic)** — user uploads bank/UPI
+9. **UPI/bank auto-capture (semi-automatic)** — user uploads bank/UPI
    statement (PDF/CSV) periodically; app parses and bulk-imports transactions
    as in/out entries, extracting the UPI note/description automatically into
    each entry. (Real-time notification/SMS reading is not used: iOS never
    allows any app to read another app's notifications/SMS, and this is a web
    app so the Android-only Notification Listener approach is also out —
    statement upload/parse is the cross-platform approach.)
-9. **Reports** — P&L, cash flow, party-wise outstanding, GST summary, export
-   to Excel/PDF.
-10. **Settings** — business profile (name, GST no., logo, address for
-    invoices), manage users, manage categories/accounts, **Integrations**
+10. **Reports** — P&L, cash flow, party-wise outstanding, GST summary,
+    per-brand and consolidated across all brands, export to Excel/PDF.
+11. **Settings** — brand profile (name, GST no., logo, address for
+    invoices) per brand, manage users, manage categories/accounts,
+    **Integrations**
     section (connection management for bank/UPI/future integrations — not a
     literal MCP protocol feature, just called "MCP Connection settings" by
     the user informally).

@@ -2,6 +2,18 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-16
+
+- Structural change: the app is for **Zeebas Cluster LLP**, which runs
+  multiple brands (DOT Advertising is one of them). Modeled as Company →
+  multiple Brands, each brand an independent cash book. Company Admin gets
+  cross-brand access; staff scoped to specific brands.
+- Added **inter-brand fund transfer** as a first-class transaction type:
+  one action creates a linked paired entry in both brands' ledgers (out of
+  the sending brand, into the receiving brand) so both stay accurate and
+  traceable.
+- Reports now need both per-brand and consolidated (all-brand) views.
+
 ## 2026-09-12 (cont'd)
 
 - Audited the user's existing paid CashBook app (web.cashbook.in) live via
