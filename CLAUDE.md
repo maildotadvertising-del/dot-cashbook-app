@@ -63,13 +63,31 @@ single-business. Multi-user, GST-aware, works on mobile/tablet/web.
    Paid/Partial/Unpaid, PDF generation & share.
 8. **Categories & transactions** — custom income/expense categories, search
    and filter by date/party/category/account.
-9. **UPI/bank auto-capture (semi-automatic)** — user uploads bank/UPI
-   statement (PDF/CSV) periodically; app parses and bulk-imports transactions
-   as in/out entries, extracting the UPI note/description automatically into
-   each entry. (Real-time notification/SMS reading is not used: iOS never
-   allows any app to read another app's notifications/SMS, and this is a web
-   app so the Android-only Notification Listener approach is also out —
-   statement upload/parse is the cross-platform approach.)
+9. **UPI/bank auto-capture via email alert parsing** — genuinely automatic,
+   no manual step per transaction:
+   - Each brand gets a unique inbound email address (inbound mail webhook —
+     e.g. Cloudflare Email Workers, Postmark inbound, or Mailgun routes).
+   - User enables bank transaction alert emails and adds a Gmail filter that
+     auto-forwards them to that address. (Note: Gmail requires verifying a
+     forwarding address with a code sent to it — the app must surface that
+     code in the UI for the user to paste back into Gmail.)
+   - Incoming alert is parsed for amount, debit/credit direction, date,
+     counterparty, bank reference, and the **UPI note/narration**, then
+     written into the right brand + account as an entry, flagged
+     `auto-imported`.
+   - Category/party is auto-suggested from how the same counterparty/VPA was
+     categorized previously; entries stay flagged until a human confirms.
+   - Duplicate guard on bank transaction reference so the same transaction
+     can never be imported twice.
+   - Per-bank parser templates (HDFC, ICICI, SBI, Axis, Kotak, …) plus a
+     generic fallback parser; unparseable mails land in a review queue
+     rather than being dropped.
+   - **Fallback:** manual bank/UPI statement (PDF/CSV) upload with bulk
+     import, for backfilling history or when email alerts miss something.
+   - Real-time notification/SMS reading is deliberately NOT used: iOS never
+     allows any app to read another app's notifications/SMS, and a web app
+     can't use Android's Notification Listener either. Email parsing is the
+     cross-platform way to get the same automation.
 10. **Reports** — P&L, cash flow, party-wise outstanding, GST summary,
     per-brand and consolidated across all brands, export to Excel/PDF.
 11. **Settings** — brand profile (name, GST no., logo, address for
@@ -122,9 +140,14 @@ category (Indian SMB cash book). Key takeaways:
 ## Explicitly ruled out / clarified
 
 - No native Android/iOS app — web-only, responsive.
-- No real-time UPI notification capture — technically impossible on iOS for
-  any app, and out of scope for a web app on Android too. Statement
-  upload+parse instead.
+- No real-time UPI notification/SMS capture — technically impossible on iOS
+  for any app, and out of scope for a web app on Android too. Bank alert
+  **email parsing** is the chosen automation path (statement upload is kept
+  only as a fallback/backfill).
+- Account Aggregator (Setu/Finvu) and payment-gateway webhooks were
+  considered and not chosen for now — AA needs paid subscription plus
+  business KYC/compliance, gateway webhooks only cover incoming payments.
+  Both remain viable later if email parsing proves insufficient.
 - "MCP Connection settings" = a normal integrations settings page, not a
   literal Model Context Protocol server connection.
 

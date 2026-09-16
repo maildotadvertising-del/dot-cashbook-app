@@ -4,6 +4,13 @@ Dated log of decisions and progress. Newest entry on top.
 
 ## 2026-09-16
 
+- UPI auto-capture upgraded from manual statement upload to **bank alert
+  email parsing** — a unique inbound address per brand, Gmail auto-forward
+  rule, webhook parses amount/direction/date/counterparty/UPI note and
+  writes the entry automatically with a duplicate guard on bank reference.
+  Statement upload stays as fallback/backfill. Account Aggregator and
+  payment-gateway webhooks were presented and declined for now (cost,
+  KYC, and incoming-only coverage respectively).
 - Structural change: the app is for **Zeebas Cluster LLP**, which runs
   multiple brands (DOT Advertising is one of them). Modeled as Company →
   multiple Brands, each brand an independent cash book. Company Admin gets
