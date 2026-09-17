@@ -24,35 +24,38 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, initials } from "@/lib/utils";
+import type { BrandPermissions } from "@/lib/permissions";
 import type { Brand, Profile } from "@/lib/types";
 
-const BRAND_NAV = [
-  { href: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+const BRAND_NAV: { href: string; label: string; icon: typeof LayoutDashboard; needs?: "reports" | "write" | "manage" }[] = [
+  { href: "dashboard", label: "Dashboard", icon: LayoutDashboard, needs: "reports" },
   { href: "cashbook", label: "Cash Book", icon: BookOpen },
   { href: "parties", label: "Parties", icon: Users },
   { href: "items", label: "Items", icon: Package },
   { href: "quotations", label: "Quotations", icon: FileText },
   { href: "invoices", label: "Invoices", icon: Receipt },
   { href: "bills", label: "Purchase Bills", icon: ShoppingBag },
-  { href: "review", label: "Review", icon: Inbox },
-  { href: "reports", label: "Reports", icon: PieChart },
-  { href: "settings", label: "Settings", icon: Settings },
+  { href: "review", label: "Review", icon: Inbox, needs: "manage" },
+  { href: "reports", label: "Reports", icon: PieChart, needs: "reports" },
+  { href: "settings", label: "Settings", icon: Settings, needs: "manage" },
 ];
 
 const COMPANY_NAV = [
-  { href: "/overview", label: "All Brands", icon: Wallet },
-  { href: "/transfers", label: "Fund Transfers", icon: ArrowLeftRight },
-  { href: "/company", label: "Company", icon: Settings },
+  { href: "/overview", label: "All Brands", icon: Wallet, adminOnly: true },
+  { href: "/transfers", label: "Fund Transfers", icon: ArrowLeftRight, adminOnly: false },
+  { href: "/company", label: "Team", icon: Users, adminOnly: false },
 ];
 
 export function Shell({
   profile,
   brands,
+  permissions,
   email,
   children,
 }: {
   profile: Profile | null;
   brands: Brand[];
+  permissions: BrandPermissions[];
   email: string;
   children: React.ReactNode;
 }) {
@@ -74,8 +77,16 @@ export function Shell({
     router.refresh();
   }
 
+  const isAdmin = profile?.role === "owner" || profile?.role === "admin";
+  const perms = permissions.find((p) => p.brand_id === brandId);
+  const allowed = (needs?: "reports" | "write" | "manage") =>
+    !needs ||
+    (needs === "reports" && perms?.can_reports) ||
+    (needs === "write" && perms?.can_write) ||
+    (needs === "manage" && perms?.can_manage);
+
   const nav = activeBrand
-    ? BRAND_NAV.map((item) => ({
+    ? BRAND_NAV.filter((item) => allowed(item.needs)).map((item) => ({
         ...item,
         to: `/b/${activeBrand.id}/${item.href}`,
       }))
@@ -145,6 +156,7 @@ export function Shell({
                   {brand.id === brandId && <Check className="size-4 text-[var(--accent)]" />}
                 </Link>
               ))}
+              {isAdmin && (
               <Link
                 href="/company/brands/new"
                 onClick={() => setSwitcherOpen(false)}
@@ -152,6 +164,7 @@ export function Shell({
               >
                 + Add brand
               </Link>
+              )}
             </div>
           )}
         </div>
@@ -180,7 +193,7 @@ export function Shell({
           <div className="mt-4 px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-[var(--fg-subtle)]">
             Company
           </div>
-          {COMPANY_NAV.map((item) => {
+          {COMPANY_NAV.filter((item) => isAdmin || !item.adminOnly).map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <Link

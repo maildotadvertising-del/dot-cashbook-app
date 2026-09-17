@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Download,
   Minus,
+  Paperclip,
   Plus,
   Search,
   SlidersHorizontal,
@@ -49,6 +50,9 @@ export function Ledger({
   parties,
   totals,
   balances,
+  canWrite,
+  canManage,
+  showBalances,
 }: {
   brand: Brand;
   transactions: TransactionRow[];
@@ -61,6 +65,9 @@ export function Ledger({
   parties: Party[];
   totals: { in: number; out: number; net: number };
   balances: BalanceRow[];
+  canWrite: boolean;
+  canManage: boolean;
+  showBalances: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -118,20 +125,26 @@ export function Ledger({
         subtitle={brand.name}
         actions={
           <>
-            <Link href={`/b/${brand.id}/import`} className="btn btn-ghost">
-              <Upload className="size-4" />
-              <span className="hidden sm:inline">Import</span>
-            </Link>
+            {canManage && (
+              <Link href={`/b/${brand.id}/import`} className="btn btn-ghost">
+                <Upload className="size-4" />
+                <span className="hidden sm:inline">Import</span>
+              </Link>
+            )}
             <button className="btn btn-ghost" onClick={exportLedger}>
               <Download className="size-4" />
               <span className="hidden sm:inline">Export</span>
             </button>
-            <button className="btn btn-in" onClick={() => openNew("in")}>
-              <Plus className="size-4" /> Cash In
-            </button>
-            <button className="btn btn-out" onClick={() => openNew("out")}>
-              <Minus className="size-4" /> Cash Out
-            </button>
+            {canWrite && (
+              <>
+                <button className="btn btn-in" onClick={() => openNew("in")}>
+                  <Plus className="size-4" /> Cash In
+                </button>
+                <button className="btn btn-out" onClick={() => openNew("out")}>
+                  <Minus className="size-4" /> Cash Out
+                </button>
+              </>
+            )}
           </>
         }
       />
@@ -139,17 +152,21 @@ export function Ledger({
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Cash In" value={totals.in} tone="in" />
         <StatCard label="Cash Out" value={totals.out} tone="out" />
-        <StatCard
-          label="Net Balance"
-          value={totals.net}
-          tone={totals.net >= 0 ? "accent" : "out"}
-        />
-        <StatCard
-          label="On Hand"
-          value={balances.reduce((sum, b) => sum + Number(b.balance), 0)}
-          hint={balances.map((b) => `${b.name} ₹${money(b.balance)}`).join(" · ")}
-          icon={<Wallet className="size-3.5" />}
-        />
+        {showBalances && (
+          <>
+            <StatCard
+              label="Net Balance"
+              value={totals.net}
+              tone={totals.net >= 0 ? "accent" : "out"}
+            />
+            <StatCard
+              label="On Hand"
+              value={balances.reduce((sum, b) => sum + Number(b.balance), 0)}
+              hint={balances.map((b) => `${b.name} ₹${money(b.balance)}`).join(" · ")}
+              icon={<Wallet className="size-3.5" />}
+            />
+          </>
+        )}
       </div>
 
       <GlassCard className="!p-3">
@@ -257,9 +274,11 @@ export function Ledger({
               title="No entries yet"
               description="Add your first Cash In or Cash Out entry to start the book."
               action={
-                <button className="btn btn-in" onClick={() => openNew("in")}>
-                  <Plus className="size-4" /> Add Cash In
-                </button>
+                canWrite && (
+                  <button className="btn btn-in" onClick={() => openNew("in")}>
+                    <Plus className="size-4" /> Add Cash In
+                  </button>
+                )
               }
             />
           </GlassCard>
@@ -341,6 +360,7 @@ export function Ledger({
                           {t.source === "email" && <Pill tone="accent">auto</Pill>}
                           {t.source === "transfer" && <Pill tone="accent">transfer</Pill>}
                           {t.needs_review && <Pill tone="warn">review</Pill>}
+                          {t.bill_url && <Paperclip className="size-3.5" aria-label="Bill attached" />}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--fg-muted)]">{t.category?.name ?? "—"}</td>

@@ -1,8 +1,6 @@
 -- DOT Cash Book — initial schema
 -- Company (Zeebas Cluster LLP) -> Brands -> per-brand ledgers.
 
-create extension if not exists "pgcrypto";
-
 -- ---------------------------------------------------------------- core org
 
 create table companies (

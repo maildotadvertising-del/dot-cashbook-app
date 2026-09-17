@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { GlassCard, PageHeader, Pill, StatCard } from "@/components/ui";
 import { CashflowChart } from "@/components/dashboard/cashflow-chart";
 import { formatDate, money } from "@/lib/utils";
@@ -25,6 +26,10 @@ export default async function DashboardPage({
 
   const { data: brand } = await supabase.from("brands").select("*").eq("id", brandId).single();
   if (!brand) notFound();
+
+  if (!(await brandPermissions(supabase, brandId))?.can_reports) {
+    redirect(`/b/${brandId}/cashbook`);
+  }
 
   const chartStart = new Date();
   chartStart.setDate(chartStart.getDate() - 29);

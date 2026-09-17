@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { ReviewView } from "@/components/review/review-view";
 import type { TransactionRow } from "@/lib/types";
 
@@ -13,6 +14,10 @@ export default async function ReviewPage({
 
   const { data: brand } = await supabase.from("brands").select("*").eq("id", brandId).single();
   if (!brand) notFound();
+
+  if (!(await brandPermissions(supabase, brandId))?.can_manage) {
+    redirect(`/b/${brandId}/cashbook`);
+  }
 
   const [{ data: pending }, { data: categories }, { data: modes }, { data: parties }, { data: skipped }] =
     await Promise.all([

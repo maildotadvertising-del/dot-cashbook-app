@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Paperclip, Trash2, X } from "lucide-react";
 import { Combo } from "@/components/combo";
 import { Field, Modal } from "@/components/ui";
 import {
@@ -12,6 +12,7 @@ import {
   updateTransaction,
 } from "@/app/actions/transactions";
 import { createCategory, createParty, createPaymentMode } from "@/app/actions/masters";
+import { receiptUrl, uploadReceipt } from "@/lib/receipts";
 import { cn, todayISO } from "@/lib/utils";
 import type {
   Account,
@@ -53,6 +54,8 @@ export function EntryModal({
   const [partyId, setPartyId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [modeId, setModeId] = useState<string | null>(null);
+  const [billUrl, setBillUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -64,6 +67,7 @@ export function EntryModal({
     setPartyId(entry?.party_id ?? null);
     setCategoryId(entry?.category_id ?? null);
     setModeId(entry?.payment_mode_id ?? null);
+    setBillUrl(entry?.bill_url ?? null);
   }, [open, entry, direction, accounts]);
 
   async function save() {
@@ -82,6 +86,7 @@ export function EntryModal({
       party_id: partyId,
       category_id: categoryId,
       payment_mode_id: modeId,
+      bill_url: billUrl,
     };
 
     const result = entry
@@ -234,6 +239,57 @@ export function EntryModal({
           </Field>
         </div>
 
+        <div className="flex items-center gap-2">
+          {billUrl ? (
+            <>
+              <button
+                type="button"
+                className="btn btn-ghost min-w-0 flex-1 justify-start"
+                onClick={async () => {
+                  const url = await receiptUrl(billUrl);
+                  if (url) window.open(url, "_blank", "noopener");
+                  else toast.error("Couldn't open the attachment");
+                }}
+              >
+                <Paperclip className="size-4" />
+                <span className="truncate">View bill</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost !px-3"
+                onClick={() => setBillUrl(null)}
+                aria-label="Remove bill"
+              >
+                <X className="size-4" />
+              </button>
+            </>
+          ) : (
+            <label className="btn btn-ghost flex-1 cursor-pointer justify-start">
+              {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+              {uploading ? "Uploading…" : "Attach bill photo"}
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                disabled={uploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setUploading(true);
+                  try {
+                    setBillUrl(await uploadReceipt(brandId, file));
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Upload failed");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+            </label>
+          )}
+        </div>
+
         <div className="mt-1 flex items-center gap-2">
           {entry && (
             <button
@@ -249,7 +305,7 @@ export function EntryModal({
           <button
             type="button"
             onClick={save}
-            disabled={busy}
+            disabled={busy || uploading}
             className={cn("btn flex-1", dir === "in" ? "btn-in" : "btn-out")}
           >
             {busy && <Loader2 className="size-4 animate-spin" />}

@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { ReportsView } from "@/components/reports/reports-view";
 
 function defaultRange() {
@@ -22,6 +23,10 @@ export default async function ReportsPage({
 
   const { data: brand } = await supabase.from("brands").select("*").eq("id", brandId).single();
   if (!brand) notFound();
+
+  if (!(await brandPermissions(supabase, brandId))?.can_reports) {
+    redirect(`/b/${brandId}/cashbook`);
+  }
 
   const fallback = defaultRange();
   const from = sp.from || fallback.from;

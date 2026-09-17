@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { Ledger } from "@/components/cashbook/ledger";
 
 const PAGE_SIZE = 50;
@@ -58,6 +59,7 @@ export default async function CashbookPage({
     { data: parties },
     { data: summary },
     { data: balances },
+    perms,
   ] = await Promise.all([
     query,
     supabase.from("accounts").select("*").eq("brand_id", brandId).order("sort_order"),
@@ -71,6 +73,7 @@ export default async function CashbookPage({
       account: sp.account ?? null,
     }),
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
+    brandPermissions(supabase, brandId),
   ]);
 
   const totals = summary?.[0] ?? { total_in: 0, total_out: 0, net: 0 };
@@ -92,6 +95,9 @@ export default async function CashbookPage({
         net: Number(totals.net),
       }}
       balances={balances ?? []}
+      canWrite={perms?.can_write ?? false}
+      canManage={perms?.can_manage ?? false}
+      showBalances={perms?.can_reports ?? false}
     />
   );
 }

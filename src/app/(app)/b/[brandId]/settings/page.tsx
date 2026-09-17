@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { SettingsView } from "@/components/settings/settings-view";
 
 export default async function SettingsPage({
@@ -12,6 +13,10 @@ export default async function SettingsPage({
 
   const { data: brand } = await supabase.from("brands").select("*").eq("id", brandId).single();
   if (!brand) notFound();
+
+  if (!(await brandPermissions(supabase, brandId))?.can_manage) {
+    redirect(`/b/${brandId}/cashbook`);
+  }
 
   const [{ data: accounts }, { data: categories }, { data: modes }, { data: inbound }, { data: imports }] =
     await Promise.all([

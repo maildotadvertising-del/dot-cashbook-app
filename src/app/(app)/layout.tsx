@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/shell";
+import { NoAccess } from "@/components/no-access";
+import { allBrandPermissions } from "@/lib/permissions";
 import type { Brand, Profile } from "@/lib/types";
 
 export default async function AppLayout({
@@ -15,15 +17,19 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: brands }] = await Promise.all([
+  const [{ data: profile }, { data: brands }, permissions] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("brands").select("*").order("sort_order").order("name"),
+    allBrandPermissions(supabase),
   ]);
+
+  if (!profile?.company_id) return <NoAccess email={user.email ?? ""} />;
 
   return (
     <Shell
-      profile={profile as Profile | null}
+      profile={profile as Profile}
       brands={(brands ?? []) as Brand[]}
+      permissions={permissions}
       email={user.email ?? ""}
     >
       {children}

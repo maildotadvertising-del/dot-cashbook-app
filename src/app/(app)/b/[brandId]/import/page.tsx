@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { brandPermissions } from "@/lib/permissions";
 import { StatementImport } from "@/components/import/statement-import";
 
 export default async function ImportPage({
@@ -15,6 +16,10 @@ export default async function ImportPage({
     supabase.from("accounts").select("*").eq("brand_id", brandId).eq("is_active", true).order("sort_order"),
   ]);
   if (!brand) notFound();
+
+  if (!(await brandPermissions(supabase, brandId))?.can_manage) {
+    redirect(`/b/${brandId}/cashbook`);
+  }
 
   return <StatementImport brand={brand} accounts={accounts ?? []} />;
 }
