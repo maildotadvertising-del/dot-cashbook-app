@@ -9,6 +9,7 @@ import { Field, GlassCard, PageHeader } from "@/components/ui";
 import { saveDocument, type DocumentLineInput } from "@/app/actions/documents";
 import { createParty } from "@/app/actions/masters";
 import { computeTotals, lineAmount, treatmentFor } from "@/lib/gst";
+import { DOC_META } from "@/lib/doc-meta";
 import { cn, money, todayISO } from "@/lib/utils";
 import type { Brand, DocType, DocumentLine, DocumentRecord, Item, Party } from "@/lib/types";
 
@@ -48,6 +49,7 @@ export function DocumentEditor({
   const [partyId, setPartyId] = useState<string | null>(existing?.party_id ?? null);
   const [docDate, setDocDate] = useState(existing?.doc_date ?? todayISO());
   const [dueDate, setDueDate] = useState(existing?.due_date ?? "");
+  const [docNumber, setDocNumber] = useState(existing?.doc_number ?? "");
   const [isGst, setIsGst] = useState(existing?.is_gst ?? Boolean(brand.gstin));
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [terms, setTerms] = useState(existing?.terms ?? "");
@@ -106,7 +108,7 @@ export function DocumentEditor({
       id: existing?.id,
       brand_id: brand.id,
       doc_type: docType,
-      doc_number: existing?.doc_number,
+      doc_number: docNumber.trim() || existing?.doc_number,
       party_id: partyId,
       doc_date: docDate,
       due_date: dueDate || null,
@@ -125,11 +127,11 @@ export function DocumentEditor({
 
     if (result.error) return toast.error(result.error);
     toast.success(`${result.doc_number ?? "Document"} saved`);
-    router.push(`/b/${brand.id}/${docType === "quotation" ? "quotations" : "invoices"}/${result.id}`);
+    router.push(`/b/${brand.id}/${DOC_META[docType].base}/${result.id}`);
     router.refresh();
   }
 
-  const label = docType === "quotation" ? "Quotation" : "Invoice";
+  const { label, dueLabel } = DOC_META[docType];
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -156,9 +158,13 @@ export function DocumentEditor({
               options={parties.map((p) => ({ id: p.id, label: p.name, hint: p.gstin ?? undefined }))}
               value={partyId}
               onChange={setPartyId}
-              placeholder="Select customer"
+              placeholder={docType === "purchase_bill" ? "Select supplier" : "Select customer"}
               onCreate={async (name) => {
-                const result = await createParty({ brand_id: brand.id, name });
+                const result = await createParty({
+                  brand_id: brand.id,
+                  name,
+                  type: docType === "purchase_bill" ? "supplier" : "customer",
+                });
                 if (result.error) {
                   toast.error(result.error);
                   return null;
@@ -169,6 +175,17 @@ export function DocumentEditor({
             />
           </Field>
 
+          {docType === "purchase_bill" && (
+            <Field label="Supplier bill no." hint="Leave blank to auto-number">
+              <input
+                className="field"
+                value={docNumber}
+                onChange={(e) => setDocNumber(e.target.value)}
+                placeholder="BILL-0001"
+              />
+            </Field>
+          )}
+
           <Field label="Date">
             <input
               className="field"
@@ -178,7 +195,7 @@ export function DocumentEditor({
             />
           </Field>
 
-          <Field label={docType === "quotation" ? "Valid until" : "Due date"}>
+          <Field label={dueLabel}>
             <input
               className="field"
               type="date"

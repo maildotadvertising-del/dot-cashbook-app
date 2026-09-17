@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Download, FileText, Plus, Search } from "lucide-react";
 import { EmptyState, GlassCard, PageHeader, Pill } from "@/components/ui";
 import { exportRows } from "@/lib/export";
+import { DOC_META } from "@/lib/doc-meta";
 import { cn, formatDate, money } from "@/lib/utils";
 import type { Brand, DocStatus, DocType } from "@/lib/types";
 
@@ -42,8 +43,7 @@ export function DocumentList({
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | DocStatus>("all");
 
-  const base = docType === "quotation" ? "quotations" : "invoices";
-  const label = docType === "quotation" ? "Quotation" : "Invoice";
+  const { base, label } = DOC_META[docType];
   const today = new Date().toISOString().slice(0, 10);
 
   const filtered = useMemo(() => {
@@ -74,7 +74,7 @@ export function DocumentList({
         subtitle={
           docType === "quotation"
             ? `${documents.length} quotations`
-            : `₹${money(outstanding)} outstanding across ${documents.length} invoices`
+            : `₹${money(outstanding)} ${docType === "purchase_bill" ? "to pay" : "outstanding"} across ${documents.length} ${label.toLowerCase()}s`
         }
         actions={
           <>

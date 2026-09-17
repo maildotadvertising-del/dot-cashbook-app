@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft,
@@ -10,6 +11,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Upload,
   Wallet,
   X,
 } from "lucide-react";
@@ -116,6 +118,10 @@ export function Ledger({
         subtitle={brand.name}
         actions={
           <>
+            <Link href={`/b/${brand.id}/import`} className="btn btn-ghost">
+              <Upload className="size-4" />
+              <span className="hidden sm:inline">Import</span>
+            </Link>
             <button className="btn btn-ghost" onClick={exportLedger}>
               <Download className="size-4" />
               <span className="hidden sm:inline">Export</span>

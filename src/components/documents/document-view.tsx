@@ -21,6 +21,7 @@ import {
   recordPayment,
   setDocumentStatus,
 } from "@/app/actions/documents";
+import { DOC_META } from "@/lib/doc-meta";
 import { amountInWords, formatDate, money, todayISO } from "@/lib/utils";
 import type {
   Account,
@@ -58,8 +59,8 @@ export function DocumentView({
   const [payMode, setPayMode] = useState<string | null>(null);
 
   const isQuotation = doc.doc_type === "quotation";
-  const base = isQuotation ? "quotations" : "invoices";
-  const label = isQuotation ? "Quotation" : "Invoice";
+  const isBill = doc.doc_type === "purchase_bill";
+  const { base, label, partyRole, dueLabel } = DOC_META[doc.doc_type];
 
   async function pay() {
     const amount = Number(payAmount);
@@ -130,7 +131,7 @@ export function DocumentView({
           ) : (
             due > 0 && (
               <button className="btn btn-in" onClick={() => setPayOpen(true)}>
-                <BanknoteArrowUp className="size-4" /> Record payment
+                <BanknoteArrowUp className="size-4" /> {isBill ? "Record payment made" : "Record payment"}
               </button>
             )
           )}
@@ -170,13 +171,13 @@ export function DocumentView({
 
           <div className="text-right">
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--fg-muted)]">
-              {doc.is_gst ? `Tax ${label}` : label}
+              {doc.is_gst && !isBill ? `Tax ${label}` : label}
             </p>
             <p className="text-xl font-bold">{doc.doc_number}</p>
             <p className="text-xs text-[var(--fg-muted)]">{formatDate(doc.doc_date)}</p>
             {doc.due_date && (
               <p className="text-xs text-[var(--fg-muted)]">
-                {isQuotation ? "Valid until" : "Due"} {formatDate(doc.due_date)}
+                {dueLabel} {formatDate(doc.due_date)}
               </p>
             )}
             <div className="no-print mt-1.5 flex justify-end">
@@ -189,7 +190,7 @@ export function DocumentView({
 
         <div className="mt-6 border-t border-[var(--hairline)] pt-4">
           <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg-muted)]">
-            {isQuotation ? "Quotation for" : "Bill to"}
+            {partyRole}
           </p>
           <p className="mt-1 font-semibold">{party?.name ?? "—"}</p>
           {party?.address && (
@@ -331,7 +332,10 @@ export function DocumentView({
               onChange={(e) => setPayDate(e.target.value)}
             />
           </Field>
-          <Field label="Deposit into" hint="Also posts a matching cash book entry">
+          <Field
+            label={isBill ? "Paid from" : "Deposit into"}
+            hint="Also posts a matching cash book entry"
+          >
             <Combo
               options={accounts.map((a) => ({ id: a.id, label: a.name }))}
               value={payAccount}
