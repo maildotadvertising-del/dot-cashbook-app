@@ -405,6 +405,7 @@ export function Ledger({
       </div>
 
       <EntryModal
+        key={modalOpen ? (editing?.id ?? `new-${direction}`) : "closed"}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         brandId={brand.id}

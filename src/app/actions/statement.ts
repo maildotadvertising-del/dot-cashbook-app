@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { fallbackRef, type StatementRow } from "@/lib/statement";
 
 const CHUNK = 400;
@@ -12,9 +12,7 @@ export async function importStatement(input: {
   rows: StatementRow[];
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   if (!input.rows.length) return { error: "No rows to import" };
   if (input.rows.length > 5000) return { error: "Split statements larger than 5,000 rows" };

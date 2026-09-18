@@ -15,6 +15,7 @@
   --glass-bg: rgba(255, 255, 255, 0.58);
   --glass-bg-strong: rgba(255, 255, 255, 0.78);
   --glass-bg-hover: rgba(255, 255, 255, 0.72);
+  --menu-bg: #ffffff;
   --glass-border: rgba(255, 255, 255, 0.7);
   --glass-edge: rgba(255, 255, 255, 0.95);
   --glass-shadow: 0 10px 34px -12px rgba(20, 26, 48, 0.28);
@@ -48,6 +49,7 @@
     --glass-bg: rgba(30, 34, 46, 0.6);
     --glass-bg-strong: rgba(32, 36, 49, 0.84);
     --glass-bg-hover: rgba(42, 47, 62, 0.72);
+    --menu-bg: #1d212c;
     --glass-border: rgba(255, 255, 255, 0.11);
     --glass-edge: rgba(255, 255, 255, 0.22);
     --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
@@ -79,6 +81,7 @@
   --glass-bg: rgba(30, 34, 46, 0.6);
   --glass-bg-strong: rgba(32, 36, 49, 0.84);
   --glass-bg-hover: rgba(42, 47, 62, 0.72);
+  --menu-bg: #1d212c;
   --glass-border: rgba(255, 255, 255, 0.11);
   --glass-edge: rgba(255, 255, 255, 0.22);
   --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
@@ -167,6 +170,14 @@ body {
   box-shadow:
     var(--glass-shadow-lg),
     inset 0 1px 0 0 var(--glass-edge);
+}
+
+/* Menus open inside other glass panes, where a nested backdrop-filter has
+   nothing to blur — so they get an opaque surface to stay readable. */
+@utility menu {
+  background: var(--menu-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg);
 }
 
 @utility glass-hover {

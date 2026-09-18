@@ -79,7 +79,6 @@ export function DocumentView({
     if (result.error) return toast.error(result.error);
     toast.success("Payment recorded");
     setPayOpen(false);
-    router.refresh();
   }
 
   async function convert() {
@@ -104,7 +103,6 @@ export function DocumentView({
     setBusy(true);
     await setDocumentStatus(doc.id, "sent");
     setBusy(false);
-    router.refresh();
   }
 
   return (

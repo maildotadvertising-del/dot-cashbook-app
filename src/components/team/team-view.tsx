@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Clock, Loader2, Plus, ShieldCheck, UserPlus, X } from "lucide-react";
 import { EmptyState, Field, GlassCard, Modal, PageHeader, Pill } from "@/components/ui";
@@ -121,7 +120,6 @@ export function TeamView({
   access: BrandMember[];
   invites: Invite[];
 }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -155,7 +153,6 @@ export function TeamView({
     setInviteOpen(false);
     setEmail("");
     setInviteBrands([]);
-    router.refresh();
   }
 
   function openBrand(brandId: string) {
@@ -173,7 +170,6 @@ export function TeamView({
     if (result.error) return toast.error(result.error);
     toast.success(next ? "Access saved" : "Access removed");
     setEditBrand(null);
-    router.refresh();
   }
 
   async function changeRole(member: Profile, role: "admin" | "staff") {
@@ -183,7 +179,6 @@ export function TeamView({
     if (result.error) return toast.error(result.error);
     toast.success(`${member.full_name ?? member.email} is now ${role}`);
     setEditing({ ...member, role });
-    router.refresh();
   }
 
   return (
@@ -292,7 +287,6 @@ export function TeamView({
                     onClick={async () => {
                       const result = await revokeInvite(invite.id);
                       if (result.error) return toast.error(result.error);
-                      router.refresh();
                     }}
                   >
                     <X className="size-4" />

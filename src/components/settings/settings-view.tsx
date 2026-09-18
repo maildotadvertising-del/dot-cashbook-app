@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, Copy, Loader2, Mail, Plus, Trash2 } from "lucide-react";
 import { Combo } from "@/components/combo";
@@ -53,7 +52,6 @@ export function SettingsView({
     error: string | null;
   }[];
 }) {
-  const router = useRouter();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("profile");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -80,7 +78,6 @@ export function SettingsView({
     setBusy(false);
     if (result.error) return toast.error(result.error);
     toast.success("Brand updated");
-    router.refresh();
   }
 
   async function addRecord() {
@@ -106,7 +103,6 @@ export function SettingsView({
     setAddOpen(null);
     setNewName("");
     setNewOpening("");
-    router.refresh();
   }
 
   async function remove(table: string, id: string, name: string) {
@@ -115,7 +111,6 @@ export function SettingsView({
     setBusy(false);
     if (result.error) return toast.error(result.error);
     toast.success(`${name} removed`);
-    router.refresh();
   }
 
   async function generateAddress() {
@@ -124,7 +119,6 @@ export function SettingsView({
     setBusy(false);
     if (result.error) return toast.error(result.error);
     toast.success("Address created");
-    router.refresh();
   }
 
   return (
@@ -298,7 +292,6 @@ export function SettingsView({
                           value={entry.default_account_id}
                           onChange={async (accountId) => {
                             await setInboundAccount(entry.id, accountId, brand.id);
-                            router.refresh();
                           }}
                           allowClear={false}
                         />

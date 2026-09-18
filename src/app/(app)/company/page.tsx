@@ -1,12 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { TeamView } from "@/components/team/team-view";
 import type { Brand, BrandMember, Profile } from "@/lib/types";
 
 export default async function CompanyPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   const [{ data: company }, { data: brands }, { data: members }, { data: access }, { data: invites }] =
     await Promise.all([

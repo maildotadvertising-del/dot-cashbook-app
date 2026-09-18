@@ -82,7 +82,7 @@ export function Combo({
       </button>
 
       {open && (
-        <div className="glass-strong absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-[16px]">
+        <div className="menu absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-[16px]">
           <div className="flex items-center gap-2 border-b border-[var(--hairline)] px-3 py-2">
             <Search className="size-4 shrink-0 text-[var(--fg-muted)]" />
             <input

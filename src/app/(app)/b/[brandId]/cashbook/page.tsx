@@ -16,13 +16,6 @@ export default async function CashbookPage({
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const { data: brand } = await supabase
-    .from("brands")
-    .select("*")
-    .eq("id", brandId)
-    .single();
-  if (!brand) notFound();
-
   const page = Math.max(1, Number(sp.page) || 1);
   const from = sp.from || null;
   const to = sp.to || null;
@@ -52,6 +45,7 @@ export default async function CashbookPage({
   if (sp.q) query = query.or(`remark.ilike.%${sp.q}%,counterparty.ilike.%${sp.q}%`);
 
   const [
+    { data: brand },
     { data: transactions, count },
     { data: accounts },
     { data: categories },
@@ -61,6 +55,7 @@ export default async function CashbookPage({
     { data: balances },
     perms,
   ] = await Promise.all([
+    supabase.from("brands").select("*").eq("id", brandId).single(),
     query,
     supabase.from("accounts").select("*").eq("brand_id", brandId).order("sort_order"),
     supabase.from("categories").select("*").eq("brand_id", brandId).order("name"),
@@ -75,6 +70,8 @@ export default async function CashbookPage({
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
     brandPermissions(supabase, brandId),
   ]);
+
+  if (!brand) notFound();
 
   const totals = summary?.[0] ?? { total_in: 0, total_out: 0, net: 0 };
 

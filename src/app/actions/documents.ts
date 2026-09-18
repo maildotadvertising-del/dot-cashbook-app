@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { computeTotals, lineAmount } from "@/lib/gst";
 import type { DocStatus, DocType } from "@/lib/types";
 
@@ -36,9 +36,7 @@ export interface DocumentInput {
 
 export async function saveDocument(input: DocumentInput) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   if (!input.lines.length) return { error: "Add at least one line item" };
 
@@ -215,9 +213,7 @@ export async function recordPayment(input: {
   payment_mode_id?: string | null;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   const { data: doc } = await supabase
     .from("documents")

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Download, Loader2, Plus, Search, Users } from "lucide-react";
 import { createParty } from "@/app/actions/masters";
@@ -20,7 +19,6 @@ export function PartiesView({
   brand: Brand;
   parties: PartyWithBalance[];
 }) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "customer" | "supplier">("all");
   const [open, setOpen] = useState(false);
@@ -71,7 +69,6 @@ export function PartiesView({
     toast.success(`${form.name} added`);
     setOpen(false);
     setForm({ name: "", type: "customer", phone: "", email: "", gstin: "", address: "", opening_balance: "" });
-    router.refresh();
   }
 
   return (

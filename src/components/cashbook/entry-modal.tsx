@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Paperclip, Trash2, X } from "lucide-react";
 import { Combo } from "@/components/combo";
@@ -44,31 +43,22 @@ export function EntryModal({
   parties: Party[];
   paymentModes: PaymentMode[];
 }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [dir, setDir] = useState<Direction>(direction);
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayISO());
-  const [remark, setRemark] = useState("");
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [partyId, setPartyId] = useState<string | null>(null);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [modeId, setModeId] = useState<string | null>(null);
-  const [billUrl, setBillUrl] = useState<string | null>(null);
+  // Initial values only: the parent remounts this component (via `key`) each
+  // time it opens, so a data refresh mid-edit never wipes what's been typed.
+  const [dir, setDir] = useState<Direction>(entry?.direction ?? direction);
+  const [amount, setAmount] = useState(entry ? String(entry.amount) : "");
+  const [date, setDate] = useState(entry?.txn_date ?? todayISO());
+  const [remark, setRemark] = useState(entry?.remark ?? "");
+  const [accountId, setAccountId] = useState<string | null>(
+    entry?.account_id ?? accounts[0]?.id ?? null,
+  );
+  const [partyId, setPartyId] = useState<string | null>(entry?.party_id ?? null);
+  const [categoryId, setCategoryId] = useState<string | null>(entry?.category_id ?? null);
+  const [modeId, setModeId] = useState<string | null>(entry?.payment_mode_id ?? null);
+  const [billUrl, setBillUrl] = useState<string | null>(entry?.bill_url ?? null);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    setDir(entry?.direction ?? direction);
-    setAmount(entry ? String(entry.amount) : "");
-    setDate(entry?.txn_date ?? todayISO());
-    setRemark(entry?.remark ?? "");
-    setAccountId(entry?.account_id ?? accounts[0]?.id ?? null);
-    setPartyId(entry?.party_id ?? null);
-    setCategoryId(entry?.category_id ?? null);
-    setModeId(entry?.payment_mode_id ?? null);
-    setBillUrl(entry?.bill_url ?? null);
-  }, [open, entry, direction, accounts]);
 
   async function save() {
     const value = Number(amount);
@@ -97,7 +87,6 @@ export function EntryModal({
     if (result.error) return toast.error(result.error);
     toast.success(entry ? "Entry updated" : `₹${value.toLocaleString("en-IN")} saved`);
     onClose();
-    router.refresh();
   }
 
   async function remove() {
@@ -108,7 +97,6 @@ export function EntryModal({
     if (result.error) return toast.error(result.error);
     toast.success("Entry deleted");
     onClose();
-    router.refresh();
   }
 
   return (
@@ -195,7 +183,6 @@ export function EntryModal({
                 toast.error(result.error);
                 return null;
               }
-              router.refresh();
               return result.id ?? null;
             }}
           />
@@ -214,7 +201,6 @@ export function EntryModal({
                   toast.error(result.error);
                   return null;
                 }
-                router.refresh();
                 return result.id ?? null;
               }}
             />
@@ -232,7 +218,6 @@ export function EntryModal({
                   toast.error(result.error);
                   return null;
                 }
-                router.refresh();
                 return result.id ?? null;
               }}
             />

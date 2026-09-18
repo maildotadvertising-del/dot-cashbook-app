@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CheckCheck, Inbox, KeyRound, Loader2, Minus, Plus } from "lucide-react";
 import { Combo } from "@/components/combo";
@@ -43,7 +42,6 @@ export function ReviewView({
   parties: Party[];
   skipped: SkippedMail[];
 }) {
-  const router = useRouter();
   const [busyAll, setBusyAll] = useState(false);
   const codes = skipped
     .map((mail) => ({ mail, code: gmailCode(mail) }))
@@ -55,7 +53,6 @@ export function ReviewView({
     setBusyAll(false);
     if (result.error) return toast.error(result.error);
     toast.success("All entries confirmed");
-    router.refresh();
   }
 
   return (
@@ -158,7 +155,6 @@ function ReviewCard({
   paymentModes: PaymentMode[];
   parties: Party[];
 }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [remark, setRemark] = useState(txn.remark ?? "");
   const [partyId, setPartyId] = useState(txn.party_id);
@@ -176,7 +172,6 @@ function ReviewCard({
     setBusy(false);
     if (result.error) return toast.error(result.error);
     toast.success("Confirmed");
-    router.refresh();
   }
 
   return (
@@ -227,7 +222,6 @@ function ReviewCard({
               toast.error(result.error);
               return null;
             }
-            router.refresh();
             return result.id ?? null;
           }}
         />
@@ -242,7 +236,6 @@ function ReviewCard({
               toast.error(result.error);
               return null;
             }
-            router.refresh();
             return result.id ?? null;
           }}
         />

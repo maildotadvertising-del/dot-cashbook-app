@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 
 const DEFAULT_ACCOUNTS = [
   { name: "Cash", type: "cash" as const, sort_order: 0 },
@@ -46,9 +46,7 @@ export async function createBrand(input: {
 }) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return { error: "Not signed in" };
 
   const { data: profile } = await supabase

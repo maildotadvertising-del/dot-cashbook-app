@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeftRight, ArrowRight, Loader2, Plus } from "lucide-react";
 import { Combo } from "@/components/combo";
@@ -19,7 +18,6 @@ export function TransfersView({
   accounts: Account[];
   transfers: Transfer[];
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fromBrand, setFromBrand] = useState<string | null>(brands[0]?.id ?? null);
@@ -68,7 +66,6 @@ export function TransfersView({
     setOpen(false);
     setAmount("");
     setNote("");
-    router.refresh();
   }
 
   return (

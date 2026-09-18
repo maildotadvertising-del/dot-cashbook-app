@@ -24,17 +24,12 @@ export default async function DashboardPage({
   const supabase = await createClient();
   const { start, end } = monthRange();
 
-  const { data: brand } = await supabase.from("brands").select("*").eq("id", brandId).single();
-  if (!brand) notFound();
-
-  if (!(await brandPermissions(supabase, brandId))?.can_reports) {
-    redirect(`/b/${brandId}/cashbook`);
-  }
-
   const chartStart = new Date();
   chartStart.setDate(chartStart.getDate() - 29);
 
   const [
+    { data: brand },
+    perms,
     { data: balances },
     { data: monthSummary },
     { data: daily },
@@ -42,6 +37,8 @@ export default async function DashboardPage({
     { data: partyBalances },
     { data: openDocs },
   ] = await Promise.all([
+    supabase.from("brands").select("*").eq("id", brandId).single(),
+    brandPermissions(supabase, brandId),
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
     supabase.rpc("ledger_summary", {
       target_brand: brandId,
@@ -74,6 +71,9 @@ export default async function DashboardPage({
       .order("due_date", { ascending: true })
       .limit(5),
   ]);
+
+  if (!brand) notFound();
+  if (!perms?.can_reports) redirect(`/b/${brandId}/cashbook`);
 
   const month = monthSummary?.[0] ?? { total_in: 0, total_out: 0, net: 0 };
   const onHand = (balances ?? []).reduce((sum, b) => sum + Number(b.balance), 0);

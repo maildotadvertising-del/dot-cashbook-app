@@ -128,7 +128,6 @@ export function DocumentEditor({
     if (result.error) return toast.error(result.error);
     toast.success(`${result.doc_number ?? "Document"} saved`);
     router.push(`/b/${brand.id}/${DOC_META[docType].base}/${result.id}`);
-    router.refresh();
   }
 
   const { label, dueLabel } = DOC_META[docType];
@@ -169,7 +168,6 @@ export function DocumentEditor({
                   toast.error(result.error);
                   return null;
                 }
-                router.refresh();
                 return result.id ?? null;
               }}
             />

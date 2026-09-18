@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import type { BrandRole } from "@/lib/types";
 
 // The database is the real gatekeeper (RLS + profile guard trigger); these
@@ -14,9 +14,7 @@ export async function inviteMember(input: {
   brand_role: BrandRole;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return { error: "Not signed in" };
 
   const email = input.email.trim().toLowerCase();

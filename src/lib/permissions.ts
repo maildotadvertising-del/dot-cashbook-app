@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface BrandPermissions {
@@ -11,10 +12,12 @@ export interface BrandPermissions {
 }
 
 // UI hints only — RLS enforces the same rules server-side regardless.
-export async function allBrandPermissions(supabase: SupabaseClient) {
+// Cached per request (keyed on the shared per-request client), so the layout
+// and the page asking for permissions costs one query, not two.
+export const allBrandPermissions = cache(async (supabase: SupabaseClient) => {
   const { data } = await supabase.rpc("my_brand_permissions");
   return (data ?? []) as BrandPermissions[];
-}
+});
 
 export async function brandPermissions(supabase: SupabaseClient, brandId: string) {
   return (await allBrandPermissions(supabase)).find((p) => p.brand_id === brandId) ?? null;

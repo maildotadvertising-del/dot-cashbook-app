@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Package, Pencil, Plus, Search } from "lucide-react";
 import { saveItem } from "@/app/actions/items";
@@ -23,7 +22,6 @@ const BLANK = {
 };
 
 export function ItemsView({ brand, items }: { brand: Brand; items: Item[] }) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -73,7 +71,6 @@ export function ItemsView({ brand, items }: { brand: Brand; items: Item[] }) {
     toast.success(form.id ? "Item updated" : `${form.name} added`);
     setOpen(false);
     setForm(BLANK);
-    router.refresh();
   }
 
   return (

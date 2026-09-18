@@ -138,7 +138,7 @@ export function Shell({
           </button>
 
           {switcherOpen && (
-            <div className="glass-strong absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-[18px] p-1.5">
+            <div className="menu absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-[18px] p-1.5">
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
