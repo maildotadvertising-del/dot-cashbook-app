@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Check, Copy, Loader2, Mail, Plus, Trash2 } from "lucide-react";
 import { Combo } from "@/components/combo";
 import { Field, GlassCard, Modal, PageHeader, Pill } from "@/components/ui";
-import { updateBrand } from "@/app/actions/brands";
 import {
   createAccount,
   createCategory,
@@ -17,7 +16,6 @@ import { cn, formatDateTime, money } from "@/lib/utils";
 import type { Account, Brand, Category, PaymentMode } from "@/lib/types";
 
 const TABS = [
-  { id: "profile", label: "Brand" },
   { id: "accounts", label: "Accounts" },
   { id: "categories", label: "Categories" },
   { id: "modes", label: "Payment modes" },
@@ -52,33 +50,16 @@ export function SettingsView({
     error: string | null;
   }[];
 }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("profile");
+  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("accounts");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const [profile, setProfile] = useState({
-    name: brand.name,
-    legal_name: brand.legal_name ?? "",
-    gstin: brand.gstin ?? "",
-    phone: brand.phone ?? "",
-    email: brand.email ?? "",
-    address: brand.address ?? "",
-    invoice_prefix: brand.invoice_prefix,
-    quotation_prefix: brand.quotation_prefix,
-  });
 
   const [addOpen, setAddOpen] = useState<null | "account" | "category" | "mode">(null);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<"cash" | "bank" | "petty" | "wallet">("cash");
   const [newOpening, setNewOpening] = useState("");
 
-  async function saveProfile() {
-    setBusy(true);
-    const result = await updateBrand(brand.id, profile);
-    setBusy(false);
-    if (result.error) return toast.error(result.error);
-    toast.success("Brand updated");
-  }
 
   async function addRecord() {
     if (!newName.trim()) return toast.error("Enter a name");
@@ -123,7 +104,7 @@ export function SettingsView({
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Settings" subtitle={brand.name} />
+      <PageHeader title="Account settings" subtitle="Accounts, categories, payment modes and auto-capture" />
 
       <div className="glass mb-4 flex flex-wrap gap-1 rounded-full p-1">
         {TABS.map((option) => (
@@ -139,77 +120,6 @@ export function SettingsView({
           </button>
         ))}
       </div>
-
-      {tab === "profile" && (
-        <GlassCard>
-          <div className="grid gap-3.5 sm:grid-cols-2">
-            <Field label="Brand name">
-              <input
-                className="field"
-                value={profile.name}
-                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              />
-            </Field>
-            <Field label="Legal name">
-              <input
-                className="field"
-                value={profile.legal_name}
-                onChange={(e) => setProfile({ ...profile, legal_name: e.target.value })}
-              />
-            </Field>
-            <Field label="GSTIN" hint="Leave blank to bill without GST by default">
-              <input
-                className="field uppercase"
-                value={profile.gstin}
-                onChange={(e) => setProfile({ ...profile, gstin: e.target.value })}
-                maxLength={15}
-              />
-            </Field>
-            <Field label="Phone">
-              <input
-                className="field"
-                value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-              />
-            </Field>
-            <Field label="Email">
-              <input
-                className="field"
-                value={profile.email}
-                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-              />
-            </Field>
-            <Field label="Invoice prefix">
-              <input
-                className="field uppercase"
-                value={profile.invoice_prefix}
-                onChange={(e) => setProfile({ ...profile, invoice_prefix: e.target.value })}
-                maxLength={8}
-              />
-            </Field>
-            <Field label="Quotation prefix">
-              <input
-                className="field uppercase"
-                value={profile.quotation_prefix}
-                onChange={(e) => setProfile({ ...profile, quotation_prefix: e.target.value })}
-                maxLength={8}
-              />
-            </Field>
-            <Field label="Address" className="sm:col-span-2">
-              <textarea
-                className="field min-h-20 resize-y"
-                value={profile.address}
-                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-              />
-            </Field>
-          </div>
-
-          <button className="btn btn-accent mt-4" onClick={saveProfile} disabled={busy}>
-            {busy && <Loader2 className="size-4 animate-spin" />}
-            Save changes
-          </button>
-        </GlassCard>
-      )}
 
       {tab === "accounts" && (
         <ListCard

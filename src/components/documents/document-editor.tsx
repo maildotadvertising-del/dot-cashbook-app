@@ -19,14 +19,14 @@ interface EditorLine extends DocumentLineInput {
   key: string;
 }
 
-const blankLine = (): EditorLine => ({
+const blankLine = (brand: Brand): EditorLine => ({
   key: crypto.randomUUID(),
   name: "",
   qty: 1,
   rate: 0,
   discount_pct: 0,
-  gst_rate: 18,
-  unit: "nos",
+  gst_rate: Number(brand.item_default_gst ?? 18),
+  unit: brand.item_default_unit || "nos",
 });
 
 export function DocumentEditor({
@@ -51,8 +51,9 @@ export function DocumentEditor({
   const [dueDate, setDueDate] = useState(existing?.due_date ?? "");
   const [docNumber, setDocNumber] = useState(existing?.doc_number ?? "");
   const [isGst, setIsGst] = useState(existing?.is_gst ?? Boolean(brand.gstin));
-  const [notes, setNotes] = useState(existing?.notes ?? "");
-  const [terms, setTerms] = useState(existing?.terms ?? "");
+  // New documents start from the brand's default notes/terms (Invoice settings).
+  const [notes, setNotes] = useState(existing ? (existing.notes ?? "") : (brand.default_notes ?? ""));
+  const [terms, setTerms] = useState(existing ? (existing.terms ?? "") : (brand.default_terms ?? ""));
   const [lines, setLines] = useState<EditorLine[]>(
     existingLines?.length
       ? existingLines.map((l) => ({
@@ -67,7 +68,7 @@ export function DocumentEditor({
           discount_pct: Number(l.discount_pct),
           gst_rate: Number(l.gst_rate),
         }))
-      : [blankLine()],
+      : [blankLine(brand)],
   );
 
   const party = parties.find((p) => p.id === partyId) ?? null;
@@ -94,7 +95,8 @@ export function DocumentEditor({
       description: item.description,
       hsn_sac: item.hsn_sac,
       unit: item.unit,
-      rate: Number(item.rate),
+      // Suppliers bill us at cost; customers are quoted/invoiced at sale price.
+      rate: Number(docType === "purchase_bill" ? item.purchase_rate : item.rate),
       gst_rate: Number(item.gst_rate),
     });
   }
@@ -257,7 +259,7 @@ export function DocumentEditor({
                     options={items.map((i) => ({
                       id: i.id,
                       label: i.name,
-                      hint: `₹${money(i.rate)}`,
+                      hint: `₹${money(docType === "purchase_bill" ? i.purchase_rate : i.rate)}`,
                     }))}
                     value={line.item_id ?? null}
                     onChange={(id) => applyItem(line.key, id)}
@@ -339,7 +341,7 @@ export function DocumentEditor({
                 onClick={() =>
                   setLines((current) =>
                     current.length === 1
-                      ? [blankLine()]
+                      ? [blankLine(brand)]
                       : current.filter((l) => l.key !== line.key),
                   )
                 }
@@ -356,7 +358,7 @@ export function DocumentEditor({
           <button
             type="button"
             className="btn btn-ghost"
-            onClick={() => setLines((current) => [...current, blankLine()])}
+            onClick={() => setLines((current) => [...current, blankLine(brand)])}
           >
             <Plus className="size-4" /> Add line
           </button>

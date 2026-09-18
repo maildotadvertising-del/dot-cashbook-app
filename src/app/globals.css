@@ -1,102 +1,48 @@
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------ tokens */
+/* DOT Team App theme (see DOT-Team-App-THEME.md): dark-only Apple-style
+   liquid glass, Apple system accents, DM Sans / DM Mono, 0.5px hairlines. */
 
 :root {
-  --bg-base: #eef1f7;
-  --bg-tint-a: #c9d8ff;
-  --bg-tint-b: #ffd9ec;
-  --bg-tint-c: #cdf3e6;
+  --blue: #0a84ff;
+  --green: #30d158;
+  --orange: #ff9f0a;
+  --red: #ff453a;
+  --purple: #bf5fff;
 
-  --fg: #10131a;
-  --fg-muted: #5d6475;
-  --fg-subtle: #878ea1;
+  --bg-base: #040408;
+  --fg: #f5f5f7;
+  --fg-muted: rgba(245, 245, 247, 0.45);
+  --fg-subtle: rgba(245, 245, 247, 0.28);
+  --faint: rgba(245, 245, 247, 0.1);
 
-  --glass-bg: rgba(255, 255, 255, 0.58);
-  --glass-bg-strong: rgba(255, 255, 255, 0.78);
-  --glass-bg-hover: rgba(255, 255, 255, 0.72);
-  --menu-bg: #ffffff;
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-edge: rgba(255, 255, 255, 0.95);
-  --glass-shadow: 0 10px 34px -12px rgba(20, 26, 48, 0.28);
-  --glass-shadow-lg: 0 26px 64px -20px rgba(20, 26, 48, 0.4);
-
-  --accent: #2f6bff;
+  /* Semantic aliases the components use */
+  --accent: var(--blue);
   --accent-fg: #ffffff;
-  --accent-soft: rgba(47, 107, 255, 0.12);
+  --accent-soft: rgba(10, 132, 255, 0.15);
+  --accent-line: rgba(10, 132, 255, 0.28);
+  --in: var(--green);
+  --in-soft: rgba(48, 209, 88, 0.15);
+  --in-line: rgba(48, 209, 88, 0.28);
+  --out: var(--red);
+  --out-soft: rgba(255, 69, 58, 0.15);
+  --out-line: rgba(255, 69, 58, 0.28);
+  --warn: var(--orange);
+  --warn-soft: rgba(255, 159, 10, 0.15);
+  --warn-line: rgba(255, 159, 10, 0.28);
+  --special: var(--purple);
+  --special-soft: rgba(191, 95, 255, 0.15);
 
-  --in: #0a9d63;
-  --in-soft: rgba(10, 157, 99, 0.13);
-  --out: #e0344a;
-  --out-soft: rgba(224, 52, 74, 0.13);
-  --warn: #c77800;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-strong: rgba(10, 10, 22, 0.96);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --hairline: rgba(255, 255, 255, 0.06);
+  --menu-bg: #1a1a2e;
+  --nav-bg: rgba(4, 4, 8, 0.8);
+  --inactive-icon: rgba(235, 235, 245, 0.35);
 
-  --hairline: rgba(16, 19, 26, 0.09);
-  --radius: 22px;
-}
-
-:root:not([data-theme="light"]) {
-  @media (prefers-color-scheme: dark) {
-    --bg-base: #0a0c12;
-    --bg-tint-a: #1d2c5c;
-    --bg-tint-b: #4a1f3c;
-    --bg-tint-c: #103a33;
-
-    --fg: #f2f4f9;
-    --fg-muted: #a2a9bd;
-    --fg-subtle: #757d92;
-
-    --glass-bg: rgba(30, 34, 46, 0.6);
-    --glass-bg-strong: rgba(32, 36, 49, 0.84);
-    --glass-bg-hover: rgba(42, 47, 62, 0.72);
-    --menu-bg: #1d212c;
-    --glass-border: rgba(255, 255, 255, 0.11);
-    --glass-edge: rgba(255, 255, 255, 0.22);
-    --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
-    --glass-shadow-lg: 0 26px 64px -20px rgba(0, 0, 0, 0.8);
-
-    --accent: #5b8bff;
-    --accent-soft: rgba(91, 139, 255, 0.18);
-
-    --in: #2ecb8b;
-    --in-soft: rgba(46, 203, 139, 0.16);
-    --out: #ff6b7e;
-    --out-soft: rgba(255, 107, 126, 0.16);
-    --warn: #f0a93a;
-
-    --hairline: rgba(255, 255, 255, 0.09);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg-base: #0a0c12;
-  --bg-tint-a: #1d2c5c;
-  --bg-tint-b: #4a1f3c;
-  --bg-tint-c: #103a33;
-
-  --fg: #f2f4f9;
-  --fg-muted: #a2a9bd;
-  --fg-subtle: #757d92;
-
-  --glass-bg: rgba(30, 34, 46, 0.6);
-  --glass-bg-strong: rgba(32, 36, 49, 0.84);
-  --glass-bg-hover: rgba(42, 47, 62, 0.72);
-  --menu-bg: #1d212c;
-  --glass-border: rgba(255, 255, 255, 0.11);
-  --glass-edge: rgba(255, 255, 255, 0.22);
-  --glass-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.66);
-  --glass-shadow-lg: 0 26px 64px -20px rgba(0, 0, 0, 0.8);
-
-  --accent: #5b8bff;
-  --accent-soft: rgba(91, 139, 255, 0.18);
-
-  --in: #2ecb8b;
-  --in-soft: rgba(46, 203, 139, 0.16);
-  --out: #ff6b7e;
-  --out-soft: rgba(255, 107, 126, 0.16);
-  --warn: #f0a93a;
-
-  --hairline: rgba(255, 255, 255, 0.09);
+  --radius: 13px;
 }
 
 @theme inline {
@@ -105,18 +51,13 @@
   --color-fg-muted: var(--fg-muted);
   --color-fg-subtle: var(--fg-subtle);
   --color-accent: var(--accent);
-  --color-accent-fg: var(--accent-fg);
-  --color-accent-soft: var(--accent-soft);
   --color-in: var(--in);
-  --color-in-soft: var(--in-soft);
   --color-out: var(--out);
-  --color-out-soft: var(--out-soft);
   --color-warn: var(--warn);
   --color-hairline: var(--hairline);
-  --color-glass-border: var(--glass-border);
-  --radius-glass: var(--radius);
-  --font-sans: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+    sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, "SF Mono", monospace;
 }
 
 /* -------------------------------------------------------------------- base */
@@ -126,75 +67,132 @@
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 body {
   min-height: 100dvh;
   color: var(--fg);
   font-family: var(--font-sans);
+  font-weight: 300;
   background-color: var(--bg-base);
   background-image:
-    radial-gradient(58% 48% at 12% 8%, var(--bg-tint-a) 0%, transparent 62%),
-    radial-gradient(52% 44% at 92% 4%, var(--bg-tint-b) 0%, transparent 60%),
-    radial-gradient(60% 52% at 78% 96%, var(--bg-tint-c) 0%, transparent 62%);
+    radial-gradient(ellipse at 15% 10%, rgba(10, 40, 100, 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, rgba(80, 10, 120, 0.35) 0%, transparent 50%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Soft orbs behind everything: blue top-left, purple bottom-right. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(10, 80, 200, 0.16), transparent 70%);
+}
+body::after {
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  right: -50px;
+  background: radial-gradient(circle, rgba(100, 20, 180, 0.12), transparent 70%);
 }
 
 ::selection {
   background: var(--accent-soft);
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: rgba(245, 245, 247, 0.26);
+}
+
+select option {
+  background: var(--menu-bg);
+  color: var(--fg);
+}
+
 /* ------------------------------------------------------------ glass layers */
 
-/* The core Liquid Glass surface: blurred backdrop, a bright specular top
-   edge, and a soft shadow so the pane reads as floating above the content. */
+/* Main card */
 @utility glass {
   position: relative;
   background: var(--glass-bg);
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    var(--glass-shadow),
-    inset 0 1px 0 0 var(--glass-edge);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid var(--glass-border);
 }
 
+/* Modal / raised surface */
 @utility glass-strong {
   position: relative;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(34px) saturate(190%);
-  -webkit-backdrop-filter: blur(34px) saturate(190%);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    var(--glass-shadow-lg),
-    inset 0 1px 0 0 var(--glass-edge);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
 }
 
-/* Menus open inside other glass panes, where a nested backdrop-filter has
-   nothing to blur — so they get an opaque surface to stay readable. */
-@utility menu {
-  background: var(--menu-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-lg);
+/* Small / nested card */
+@utility glass-soft {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 
 @utility glass-hover {
-  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  transition: background 150ms ease, transform 150ms ease;
 
   &:hover {
     background: var(--glass-bg-hover);
   }
 }
 
+/* Menus open inside other glass panes, where a nested backdrop-filter has
+   nothing to blur — so they get an opaque surface to stay readable. */
+@utility menu {
+  background: var(--menu-bg);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
 @utility card {
   border-radius: var(--radius);
-  padding: 1.25rem;
+  padding: 14px 16px;
 }
 
 @utility hairline {
   border-color: var(--hairline);
+}
+
+/* Coloured stat card tints */
+@utility tint-in {
+  background: linear-gradient(135deg, rgba(48, 209, 88, 0.11), rgba(48, 209, 88, 0.03));
+  border-color: rgba(48, 209, 88, 0.16);
+}
+@utility tint-out {
+  background: linear-gradient(135deg, rgba(255, 69, 58, 0.11), rgba(255, 69, 58, 0.03));
+  border-color: rgba(255, 69, 58, 0.16);
+}
+@utility tint-accent {
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.11), rgba(10, 132, 255, 0.03));
+  border-color: rgba(10, 132, 255, 0.16);
+}
+@utility tint-warn {
+  background: linear-gradient(135deg, rgba(255, 159, 10, 0.11), rgba(255, 159, 10, 0.03));
+  border-color: rgba(255, 159, 10, 0.16);
 }
 
 /* --------------------------------------------------------------- controls */
@@ -203,104 +201,106 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 999px;
-  padding: 0.625rem 1.15rem;
-  font-size: 0.925rem;
-  font-weight: 600;
+  gap: 0.45rem;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.2;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+  transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
 
-  &:active {
-    transform: scale(0.97);
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+    opacity: 0.85;
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 }
 
 @utility btn-accent {
-  background: var(--accent);
-  color: var(--accent-fg);
-  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--accent) 80%, transparent);
-
-  &:hover:not(:disabled) {
-    filter: brightness(1.07);
-  }
+  background: linear-gradient(135deg, #0a84ff, #0a60cc);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.35);
 }
 
+/* Tinted action buttons: accent tint background, solid accent text. */
 @utility btn-in {
-  background: var(--in);
-  color: #fff;
-  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--in) 80%, transparent);
-
-  &:hover:not(:disabled) {
-    filter: brightness(1.07);
-  }
+  background: var(--in-soft);
+  color: var(--in);
+  border: 0.5px solid rgba(48, 209, 88, 0.35);
+  font-weight: 600;
 }
 
 @utility btn-out {
-  background: var(--out);
-  color: #fff;
-  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--out) 80%, transparent);
-
-  &:hover:not(:disabled) {
-    filter: brightness(1.07);
-  }
+  background: var(--out-soft);
+  color: var(--out);
+  border: 0.5px solid rgba(255, 69, 58, 0.35);
+  font-weight: 600;
 }
 
 @utility btn-ghost {
-  background: var(--glass-bg);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--fg);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
 
   &:hover:not(:disabled) {
-    background: var(--glass-bg-hover);
+    background: rgba(255, 255, 255, 0.09);
   }
 }
 
 @utility field {
   width: 100%;
-  border-radius: 14px;
-  border: 1px solid var(--hairline);
-  background: color-mix(in srgb, var(--glass-bg-strong) 85%, transparent);
-  padding: 0.625rem 0.85rem;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 300;
   color: var(--fg);
   outline: none;
-  transition: border-color 140ms ease, box-shadow 140ms ease;
-
-  &::placeholder {
-    color: var(--fg-subtle);
-  }
+  transition: border-color 150ms ease;
 
   &:focus {
-    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+    border-color: var(--blue);
+  }
+
+  /* Stops iOS from zooming into inputs */
+  @media (max-width: 680px) {
+    font-size: 16px;
   }
 }
 
 @utility pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   border-radius: 999px;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 500;
   white-space: nowrap;
+  border: 0.5px solid transparent;
 }
 
-/* Tabular figures keep money columns from jittering as values change. */
+/* Money and IDs in DM Mono so columns line up. */
 @utility money {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.2px;
+}
+
+@utility label-caps {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--fg-muted);
+  font-weight: 400;
 }
 
 @keyframes rise {
@@ -315,7 +315,7 @@ body {
 }
 
 @utility rise {
-  animation: rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 220ms ease both;
 }
 
 /* ---------------------------------------------------------------- scrolling */
@@ -326,7 +326,7 @@ body {
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--fg-subtle) 42%, transparent);
+    background: rgba(255, 255, 255, 0.12);
     border: 3px solid transparent;
     background-clip: content-box;
     border-radius: 999px;
@@ -338,11 +338,36 @@ body {
 
 /* ------------------------------------------------------------------- print */
 
+/* The app is dark-only, but paper is white: swap every token to ink-on-paper
+   so invoices and reports print legibly. */
 @media print {
-  body {
-    background: #fff;
+  :root {
+    --fg: #111;
+    --fg-muted: #555;
+    --fg-subtle: #777;
+    --hairline: #ddd;
+    --glass-border: #ddd;
+    --in: #1a7f37;
+    --out: #c4302b;
+    --accent: #0a60cc;
   }
+  body {
+    background: #fff !important;
+    color: #111;
+  }
+  body::before,
+  body::after,
+  header,
+  nav,
   .no-print {
     display: none !important;
+  }
+  .glass,
+  .glass-strong {
+    background: #fff !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }

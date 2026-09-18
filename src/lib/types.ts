@@ -33,6 +33,10 @@ export interface Brand {
   state_code: string | null;
   invoice_prefix: string;
   quotation_prefix: string;
+  item_default_gst: number;
+  item_default_unit: string;
+  default_terms: string | null;
+  default_notes: string | null;
   is_active: boolean;
   sort_order: number;
 }
@@ -147,7 +151,10 @@ export interface Item {
   description: string | null;
   hsn_sac: string | null;
   unit: string;
+  /** Sale rate — quotations and invoices */
   rate: number;
+  /** Purchase rate — purchase bills */
+  purchase_rate: number;
   gst_rate: number;
   is_active: boolean;
 }

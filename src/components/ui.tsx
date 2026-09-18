@@ -15,10 +15,10 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-[22px] font-semibold tracking-tight lg:text-[26px]">{title}</h1>
-        {subtitle && <p className="text-sm text-[var(--fg-muted)]">{subtitle}</p>}
+        <h1 className="text-[19px] font-medium tracking-[-0.3px]">{title}</h1>
+        {subtitle && <p className="text-[13px] font-light text-[var(--fg-muted)]">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -61,16 +61,23 @@ export function StatCard({
     accent: "text-[var(--accent)]",
   }[tone];
 
+  const tint = {
+    neutral: "",
+    in: "tint-in",
+    out: "tint-out",
+    accent: "tint-accent",
+  }[tone];
+
   return (
-    <div className="glass card rise !p-4">
+    <div className={cn("glass card rise !rounded-[14px]", tint)}>
       <div className="mb-1.5 flex items-center gap-1.5 text-[var(--fg-muted)]">
         {icon}
-        <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+        <span className="label-caps">{label}</span>
       </div>
-      <div className={cn("money text-[22px] font-bold lg:text-[26px]", toneClass)}>
+      <div className={cn("money text-[22px] font-medium tracking-[-0.5px]", toneClass)}>
         {typeof value === "number" ? `₹${money(value)}` : value}
       </div>
-      {hint && <div className="mt-0.5 text-xs text-[var(--fg-muted)]">{hint}</div>}
+      {hint && <div className="mt-0.5 truncate text-[11px] text-[var(--fg-muted)]">{hint}</div>}
     </div>
   );
 }
@@ -87,11 +94,11 @@ export function EmptyState({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
       {icon && <div className="mb-1 text-[var(--fg-subtle)]">{icon}</div>}
-      <p className="font-semibold">{title}</p>
+      <p className="text-sm font-medium">{title}</p>
       {description && (
-        <p className="max-w-sm text-sm text-[var(--fg-muted)]">{description}</p>
+        <p className="max-w-sm text-[13px] text-[var(--fg-muted)]">{description}</p>
       )}
       {action && <div className="mt-3">{action}</div>}
     </div>
@@ -125,19 +132,20 @@ export function Modal({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-0 backdrop-blur-[3px] sm:items-center sm:p-5">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/65 backdrop-blur-[10px] sm:items-center sm:p-5">
       <div className="absolute inset-0" onClick={onClose} />
       <div
         className={cn(
-          "glass-strong rise relative max-h-[92dvh] w-full overflow-auto rounded-t-[26px] p-5 sm:rounded-[26px]",
-          wide ? "sm:max-w-3xl" : "sm:max-w-md",
+          "glass-strong rise relative max-h-[88dvh] w-full overflow-auto rounded-t-[22px] p-5 sm:rounded-[22px]",
+          wide ? "sm:max-w-3xl" : "sm:max-w-[520px]",
         )}
+        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-[17px] font-medium tracking-[-0.2px]">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-[var(--fg-muted)] hover:bg-[var(--accent-soft)]"
+            className="grid size-8 place-items-center rounded-full bg-white/5 text-[var(--fg-muted)] hover:text-[var(--fg)]"
             aria-label="Close"
           >
             <X className="size-4" />
@@ -163,7 +171,7 @@ export function Field({
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-xs font-semibold text-[var(--fg-muted)]">{label}</span>
+      <span className="label-caps">{label}</span>
       {children}
       {hint && <span className="text-[11px] text-[var(--fg-subtle)]">{hint}</span>}
     </label>
@@ -175,14 +183,15 @@ export function Pill({
   tone = "neutral",
 }: {
   children: React.ReactNode;
-  tone?: "neutral" | "in" | "out" | "accent" | "warn";
+  tone?: "neutral" | "in" | "out" | "accent" | "warn" | "special";
 }) {
   const tones = {
-    neutral: "bg-[var(--hairline)] text-[var(--fg-muted)]",
-    in: "bg-[var(--in-soft)] text-[var(--in)]",
-    out: "bg-[var(--out-soft)] text-[var(--out)]",
-    accent: "bg-[var(--accent-soft)] text-[var(--accent)]",
-    warn: "bg-[color-mix(in_srgb,var(--warn)_18%,transparent)] text-[var(--warn)]",
+    neutral: "bg-white/5 text-[var(--fg-muted)] border-[var(--glass-border)]",
+    in: "bg-[var(--in-soft)] text-[var(--in)] border-[var(--in-line)]",
+    out: "bg-[var(--out-soft)] text-[var(--out)] border-[var(--out-line)]",
+    accent: "bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent-line)]",
+    warn: "bg-[var(--warn-soft)] text-[var(--warn)] border-[var(--warn-line)]",
+    special: "bg-[var(--special-soft)] text-[var(--special)] border-[rgba(191,95,255,0.28)]",
   };
   return <span className={cn("pill", tones[tone])}>{children}</span>;
 }

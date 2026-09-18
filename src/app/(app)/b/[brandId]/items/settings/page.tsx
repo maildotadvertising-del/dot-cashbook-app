@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { brandPermissions } from "@/lib/permissions";
-import { ItemsView } from "@/components/items/items-view";
+import { ItemsSettings } from "@/components/settings/workspace-settings";
 
-export default async function ItemsPage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ brandId: string }>;
@@ -11,12 +11,12 @@ export default async function ItemsPage({
   const { brandId } = await params;
   const supabase = await createClient();
 
-  const [{ data: brand }, { data: items }, perms] = await Promise.all([
+  const [{ data: brand }, perms] = await Promise.all([
     supabase.from("brands").select("*").eq("id", brandId).single(),
-    supabase.from("items").select("*").eq("brand_id", brandId).order("name"),
     brandPermissions(supabase, brandId),
   ]);
   if (!brand) notFound();
+  if (!perms?.can_manage) redirect(`/b/${brandId}`);
 
-  return <ItemsView brand={brand} items={items ?? []} canWrite={perms?.can_write ?? false} />;
+  return <ItemsSettings brand={brand} />;
 }

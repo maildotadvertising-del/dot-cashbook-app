@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { TransfersView } from "@/components/transfers/transfers-view";
 
-export default async function TransfersPage() {
+export default async function TransfersPage({
+  params,
+}: {
+  params: Promise<{ brandId: string }>;
+}) {
+  const { brandId } = await params;
   const supabase = await createClient();
 
   const [{ data: brands }, { data: accounts }, { data: transfers }] = await Promise.all([
@@ -10,6 +15,7 @@ export default async function TransfersPage() {
     supabase
       .from("transfers")
       .select("*")
+      .or(`from_brand_id.eq.${brandId},to_brand_id.eq.${brandId}`)
       .order("transfer_date", { ascending: false })
       .limit(50),
   ]);
@@ -19,6 +25,7 @@ export default async function TransfersPage() {
       brands={brands ?? []}
       accounts={accounts ?? []}
       transfers={transfers ?? []}
+      defaultFromBrand={brandId}
     />
   );
 }

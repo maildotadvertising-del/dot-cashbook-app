@@ -2,6 +2,20 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-18 (theme + workspaces)
+
+- Re-themed to the user's DOT Team App design system (`DOT-Team-App-THEME.md`):
+  dark-only, Apple accents, DM Sans/DM Mono, hairline glass. Print styles
+  swap tokens to ink-on-paper so invoices still print on white.
+- Replaced the sidebar with a DaVinci-style bottom dock: Items, Quotation &
+  Invoices, Accounts. Each workspace has its own sub-tabs and settings;
+  the old single Settings page was split accordingly.
+- Items now carry a purchase price (used on purchase bills) alongside the
+  sale price (quotations/invoices), with margin shown. Migration 0006 adds
+  it plus per-brand item defaults and default notes/terms; applied to the
+  live database via the SQL editor.
+- Fund transfers moved under a brand (`/b/[brand]/transfers`).
+
 ## 2026-09-18 (go-live)
 
 - Supabase project created by the user; schema applied via SQL editor;

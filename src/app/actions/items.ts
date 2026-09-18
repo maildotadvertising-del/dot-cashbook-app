@@ -11,6 +11,7 @@ export interface ItemInput {
   hsn_sac?: string | null;
   unit?: string;
   rate?: number;
+  purchase_rate?: number;
   gst_rate?: number;
 }
 
@@ -24,6 +25,7 @@ export async function saveItem(input: ItemInput & { id?: string }) {
     hsn_sac: input.hsn_sac?.trim() || null,
     unit: input.unit?.trim() || "nos",
     rate: input.rate ?? 0,
+    purchase_rate: input.purchase_rate ?? 0,
     gst_rate: input.gst_rate ?? 18,
   };
 

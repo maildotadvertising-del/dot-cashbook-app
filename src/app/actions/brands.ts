@@ -103,6 +103,10 @@ export async function updateBrand(
     state_code: string;
     invoice_prefix: string;
     quotation_prefix: string;
+    item_default_gst: number;
+    item_default_unit: string;
+    default_terms: string | null;
+    default_notes: string | null;
   }>,
 ) {
   const supabase = await createClient();

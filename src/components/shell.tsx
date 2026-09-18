@@ -1,50 +1,86 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ArrowLeftRight,
-  BookOpen,
   Check,
   ChevronDown,
   FileText,
-  Inbox,
-  LayoutDashboard,
+  LayoutGrid,
   LogOut,
-  Menu,
   Package,
-  PieChart,
-  Receipt,
-  Settings,
-  ShoppingBag,
+  Plus,
   Users,
   Wallet,
-  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, initials } from "@/lib/utils";
 import type { BrandPermissions } from "@/lib/permissions";
 import type { Brand, Profile } from "@/lib/types";
 
-const BRAND_NAV: { href: string; label: string; icon: typeof LayoutDashboard; needs?: "reports" | "write" | "manage" }[] = [
-  { href: "dashboard", label: "Dashboard", icon: LayoutDashboard, needs: "reports" },
-  { href: "cashbook", label: "Cash Book", icon: BookOpen },
-  { href: "parties", label: "Parties", icon: Users },
-  { href: "items", label: "Items", icon: Package },
-  { href: "quotations", label: "Quotations", icon: FileText },
-  { href: "invoices", label: "Invoices", icon: Receipt },
-  { href: "bills", label: "Purchase Bills", icon: ShoppingBag },
-  { href: "review", label: "Review", icon: Inbox, needs: "manage" },
-  { href: "reports", label: "Reports", icon: PieChart, needs: "reports" },
-  { href: "settings", label: "Settings", icon: Settings, needs: "manage" },
+type Need = "reports" | "manage";
+
+interface Tab {
+  href: string;
+  label: string;
+  needs?: Need;
+}
+
+interface Workspace {
+  id: "items" | "sales" | "accounts";
+  label: string;
+  icon: typeof Package;
+  tabs: Tab[];
+}
+
+/**
+ * Three DaVinci-style workspaces, switched from the bottom bar. Each one owns
+ * its own sub-pages and its own settings, so nothing from one leaks into
+ * another's screens.
+ */
+const WORKSPACES: Workspace[] = [
+  {
+    id: "items",
+    label: "Items",
+    icon: Package,
+    tabs: [
+      { href: "items", label: "Products & Services" },
+      { href: "items/settings", label: "Settings", needs: "manage" },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Quotation & Invoices",
+    icon: FileText,
+    tabs: [
+      { href: "invoices", label: "Invoices" },
+      { href: "quotations", label: "Quotations" },
+      { href: "sales/settings", label: "Settings", needs: "manage" },
+    ],
+  },
+  {
+    id: "accounts",
+    label: "Accounts",
+    icon: Wallet,
+    tabs: [
+      { href: "dashboard", label: "Dashboard", needs: "reports" },
+      { href: "cashbook", label: "Cash Book" },
+      { href: "parties", label: "Parties" },
+      { href: "bills", label: "Purchase Bills" },
+      { href: "transfers", label: "Fund Transfers" },
+      { href: "review", label: "Review", needs: "manage" },
+      { href: "reports", label: "Reports", needs: "reports" },
+      { href: "settings", label: "Settings", needs: "manage" },
+    ],
+  },
 ];
 
-const COMPANY_NAV = [
-  { href: "/overview", label: "All Brands", icon: Wallet, adminOnly: true },
-  { href: "/transfers", label: "Fund Transfers", icon: ArrowLeftRight, adminOnly: false },
-  { href: "/company", label: "Team", icon: Users, adminOnly: false },
-];
+function workspaceFor(section: string): Workspace["id"] {
+  if (section === "items") return "items";
+  if (["invoices", "quotations", "sales"].includes(section)) return "sales";
+  return "accounts";
+}
 
 export function Shell({
   profile,
@@ -61,15 +97,51 @@ export function Shell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [navOpen, setNavOpen] = useState(false);
-  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [brandMenu, setBrandMenu] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
+  const menusRef = useRef<HTMLDivElement>(null);
 
-  const brandId = useMemo(() => {
-    const match = pathname.match(/^\/b\/([^/]+)/);
-    return match?.[1] ?? null;
-  }, [pathname]);
+  const match = pathname.match(/^\/b\/([^/]+)(?:\/(.*))?/);
+  const brandIdInPath = match?.[1] ?? null;
+  const rest = match?.[2] ?? "";
+  const section = rest.split("/")[0] ?? "";
 
-  const activeBrand = brands.find((b) => b.id === brandId) ?? null;
+  // Company-level pages (Team, All Brands) have no brand in the URL; the
+  // bottom bar still needs somewhere to go, so it falls back to the first.
+  const activeBrand =
+    brands.find((b) => b.id === brandIdInPath) ?? (brandIdInPath ? null : brands[0] ?? null);
+  const perms = permissions.find((p) => p.brand_id === activeBrand?.id);
+  const isAdmin = profile?.role === "owner" || profile?.role === "admin";
+
+  const allowed = (needs?: Need) =>
+    !needs ||
+    (needs === "reports" && !!perms?.can_reports) ||
+    (needs === "manage" && !!perms?.can_manage);
+
+  const currentWs = brandIdInPath ? workspaceFor(section) : null;
+  const workspace = WORKSPACES.find((w) => w.id === currentWs) ?? null;
+  const tabs = workspace?.tabs.filter((t) => allowed(t.needs)) ?? [];
+
+  // Longest matching tab wins, so "items/settings" beats "items".
+  const activeTab = useMemo(() => {
+    const matches = tabs.filter((t) => rest === t.href || rest.startsWith(`${t.href}/`));
+    return matches.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
+  }, [tabs, rest]);
+
+  const homeFor = (ws: Workspace) =>
+    ws.tabs.find((t) => allowed(t.needs))?.href ?? ws.tabs[0].href;
+
+  useEffect(() => {
+    if (!brandMenu && !userMenu) return;
+    const close = (e: MouseEvent) => {
+      if (!menusRef.current?.contains(e.target as Node)) {
+        setBrandMenu(false);
+        setUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [brandMenu, userMenu]);
 
   async function signOut() {
     await createClient().auth.signOut();
@@ -77,189 +149,199 @@ export function Shell({
     router.refresh();
   }
 
-  const isAdmin = profile?.role === "owner" || profile?.role === "admin";
-  const perms = permissions.find((p) => p.brand_id === brandId);
-  const allowed = (needs?: "reports" | "write" | "manage") =>
-    !needs ||
-    (needs === "reports" && perms?.can_reports) ||
-    (needs === "write" && perms?.can_write) ||
-    (needs === "manage" && perms?.can_manage);
-
-  const nav = activeBrand
-    ? BRAND_NAV.filter((item) => allowed(item.needs)).map((item) => ({
-        ...item,
-        to: `/b/${activeBrand.id}/${item.href}`,
-      }))
-    : [];
+  const closeMenus = () => {
+    setBrandMenu(false);
+    setUserMenu(false);
+  };
 
   return (
-    <div className="flex min-h-dvh flex-col lg:flex-row">
-      {/* ------------------------------------------------------------ sidebar */}
-      <aside
-        className={cn(
-          "glass fixed inset-y-0 left-0 z-40 flex w-[264px] flex-col gap-4 rounded-r-[26px] p-4 transition-transform lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0",
-          navOpen ? "translate-x-0" : "-translate-x-full",
-        )}
+    <div className="relative z-[1] flex min-h-dvh flex-col">
+      {/* ------------------------------------------------------------ top bar */}
+      <header
+        ref={menusRef}
+        className="sticky top-0 z-30 border-b-[0.5px] border-[var(--hairline)] bg-[var(--nav-bg)] backdrop-blur-[28px]"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-[13px] bg-[var(--accent)] text-white">
-              <Wallet className="size-5" />
-            </span>
-            <span className="text-[15px] font-semibold tracking-tight">DOT Cash Book</span>
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
+          <Link
+            href="/"
+            className="grid size-9 shrink-0 place-items-center rounded-[12px] text-white shadow-[0_8px_24px_rgba(10,132,255,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]"
+            style={{ background: "linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,60,180,0.9))" }}
+            aria-label="Home"
+          >
+            <Wallet className="size-[18px]" />
           </Link>
-          <button
-            className="btn btn-ghost !p-2 lg:hidden"
-            onClick={() => setNavOpen(false)}
-            aria-label="Close menu"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
 
-        {/* brand switcher */}
-        <div className="relative">
-          <button
-            className="glass glass-hover flex w-full items-center gap-2.5 rounded-[16px] p-2.5 text-left"
-            onClick={() => setSwitcherOpen((v) => !v)}
-          >
-            <span className="grid size-8 shrink-0 place-items-center rounded-[11px] bg-[var(--accent-soft)] text-xs font-bold text-[var(--accent)]">
-              {initials(activeBrand?.name ?? "All")}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">
-                {activeBrand?.name ?? "All Brands"}
+          <div className="relative min-w-0">
+            <button
+              onClick={() => {
+                setBrandMenu((v) => !v);
+                setUserMenu(false);
+              }}
+              className="flex min-w-0 items-center gap-2 rounded-[10px] px-2 py-1.5 hover:bg-white/5"
+            >
+              <span className="min-w-0 text-left">
+                <span className="block text-[9px] uppercase tracking-[3px] text-[var(--fg-muted)]">
+                  Zeebas Cluster
+                </span>
+                <span className="block truncate text-sm font-medium">
+                  {activeBrand?.name ?? "All Brands"}
+                </span>
               </span>
-              <span className="block truncate text-[11px] text-[var(--fg-muted)]">
-                {activeBrand?.gstin ?? `${brands.length} brand${brands.length === 1 ? "" : "s"}`}
-              </span>
-            </span>
-            <ChevronDown className="size-4 shrink-0 text-[var(--fg-muted)]" />
-          </button>
+              <ChevronDown className="size-4 shrink-0 text-[var(--fg-muted)]" />
+            </button>
 
-          {switcherOpen && (
-            <div className="menu absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-[18px] p-1.5">
-              {brands.map((brand) => (
-                <Link
-                  key={brand.id}
-                  href={`/b/${brand.id}/dashboard`}
-                  onClick={() => {
-                    setSwitcherOpen(false);
-                    setNavOpen(false);
-                  }}
-                  className="flex items-center gap-2 rounded-[13px] px-2.5 py-2 text-sm hover:bg-[var(--accent-soft)]"
-                >
-                  <span className="grid size-7 shrink-0 place-items-center rounded-[10px] bg-[var(--accent-soft)] text-[10px] font-bold text-[var(--accent)]">
-                    {initials(brand.name)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{brand.name}</span>
-                  {brand.id === brandId && <Check className="size-4 text-[var(--accent)]" />}
-                </Link>
-              ))}
-              {isAdmin && (
-              <Link
-                href="/company/brands/new"
-                onClick={() => setSwitcherOpen(false)}
-                className="mt-1 block rounded-[13px] border-t border-[var(--hairline)] px-2.5 py-2 text-sm font-semibold text-[var(--accent)]"
-              >
-                + Add brand
-              </Link>
-              )}
-            </div>
-          )}
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-auto">
-          {nav.map((item) => {
-            const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.to}
-                onClick={() => setNavOpen(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-[14px] px-3 py-2.5 text-sm font-medium transition",
-                  active
-                    ? "bg-[var(--accent)] text-white shadow-[0_8px_20px_-10px_var(--accent)]"
-                    : "text-[var(--fg-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--fg)]",
+            {brandMenu && (
+              <div className="menu absolute left-0 top-full z-50 mt-1.5 w-64 overflow-hidden rounded-[13px] p-1.5">
+                {brands.map((brand) => (
+                  <Link
+                    key={brand.id}
+                    onClick={closeMenus}
+                    href={`/b/${brand.id}/${brandIdInPath && rest ? rest.split("/")[0] : "cashbook"}`}
+                    className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm hover:bg-white/5"
+                  >
+                    <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-[var(--accent-soft)] text-[10px] font-medium text-[var(--accent)]">
+                      {initials(brand.name)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{brand.name}</span>
+                    {brand.id === activeBrand?.id && <Check className="size-4 text-[var(--accent)]" />}
+                  </Link>
+                ))}
+                {isAdmin && (
+                  <Link
+                    href="/company/brands/new"
+                    onClick={closeMenus}
+                    className="mt-1 flex items-center gap-2 border-t-[0.5px] border-[var(--hairline)] px-2.5 pb-1.5 pt-2.5 text-sm font-medium text-[var(--accent)]"
+                  >
+                    <Plus className="size-4" /> Add brand
+                  </Link>
                 )}
-              >
-                <item.icon className="size-[18px]" />
-                {item.label}
-              </Link>
-            );
-          })}
-
-          <div className="mt-4 px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-[var(--fg-subtle)]">
-            Company
+              </div>
+            )}
           </div>
-          {COMPANY_NAV.filter((item) => isAdmin || !item.adminOnly).map((item) => {
-            const active = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setNavOpen(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-[14px] px-3 py-2.5 text-sm font-medium transition",
-                  active
-                    ? "bg-[var(--accent)] text-white shadow-[0_8px_20px_-10px_var(--accent)]"
-                    : "text-[var(--fg-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--fg)]",
-                )}
-              >
-                <item.icon className="size-[18px]" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
 
-        <div className="glass flex items-center gap-2.5 rounded-[16px] p-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-xs font-bold text-white">
-            {initials(profile?.full_name ?? email)}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-semibold">
-              {profile?.full_name ?? "You"}
-            </span>
-            <span className="block truncate text-[11px] capitalize text-[var(--fg-muted)]">
-              {profile?.role ?? "staff"}
-            </span>
-          </span>
-          <button
-            onClick={signOut}
-            className="rounded-full p-1.5 text-[var(--fg-muted)] hover:bg-[var(--out-soft)] hover:text-[var(--out)]"
-            aria-label="Sign out"
-          >
-            <LogOut className="size-4" />
-          </button>
+          <div className="relative ml-auto">
+            <button
+              onClick={() => {
+                setUserMenu((v) => !v);
+                setBrandMenu(false);
+              }}
+              className="grid size-9 place-items-center rounded-full bg-[var(--special-soft)] text-xs font-medium text-[var(--special)]"
+              aria-label="Account menu"
+            >
+              {initials(profile?.full_name ?? email)}
+            </button>
+
+            {userMenu && (
+              <div className="menu absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-[13px] p-1.5">
+                <div className="px-2.5 pb-2 pt-1.5">
+                  <p className="truncate text-sm font-medium">{profile?.full_name ?? email}</p>
+                  <p className="truncate text-xs capitalize text-[var(--fg-muted)]">
+                    {profile?.role ?? "staff"}
+                  </p>
+                </div>
+                <div className="border-t-[0.5px] border-[var(--hairline)] pt-1">
+                  <MenuLink href="/company" icon={Users} label="Team & brands" onClick={closeMenus} />
+                  {isAdmin && (
+                    <MenuLink href="/overview" icon={LayoutGrid} label="All brands overview" onClick={closeMenus} />
+                  )}
+                  <button
+                    onClick={signOut}
+                    className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm text-[var(--out)] hover:bg-[var(--out-soft)]"
+                  >
+                    <LogOut className="size-4" /> Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </aside>
 
-      {navOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/25 backdrop-blur-[2px] lg:hidden"
-          onClick={() => setNavOpen(false)}
-        />
+        {/* workspace sub-pages */}
+        {tabs.length > 0 && activeBrand && (
+          <nav className="mx-auto flex max-w-6xl gap-1.5 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none]">
+            {tabs.map((tab) => {
+              const active = tab.href === activeTab;
+              return (
+                <Link
+                  key={tab.href}
+                  href={`/b/${activeBrand.id}/${tab.href}`}
+                  className={cn(
+                    "shrink-0 rounded-full border-[0.5px] px-4 py-1.5 text-xs transition-colors",
+                    active
+                      ? "border-[var(--accent-line)] bg-[rgba(10,132,255,0.18)] font-medium text-[var(--accent)]"
+                      : "border-[var(--glass-border)] bg-white/5 text-[var(--fg-muted)] hover:text-[var(--fg)]",
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+      </header>
+
+      <main className="relative mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 pb-32 pt-5 lg:px-5">
+        {children}
+      </main>
+
+      {/* ------------------------------------------------ DaVinci-style dock */}
+      {activeBrand && (
+        <nav
+          className="fixed inset-x-0 bottom-0 z-30 border-t-[0.5px] border-[var(--hairline)] bg-[var(--nav-bg)] backdrop-blur-[28px]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="mx-auto grid max-w-md grid-cols-3">
+            {WORKSPACES.map((ws) => {
+              const active = ws.id === currentWs;
+              return (
+                <Link
+                  key={ws.id}
+                  href={`/b/${activeBrand.id}/${homeFor(ws)}`}
+                  className={cn(
+                    "flex flex-col items-center gap-1 px-2 pb-2.5 pt-3 transition-colors",
+                    active ? "text-[var(--accent)]" : "text-[var(--inactive-icon)] hover:text-[var(--fg)]",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "grid h-8 w-14 place-items-center rounded-full transition-colors",
+                      active && "bg-[var(--accent-soft)]",
+                    )}
+                  >
+                    <ws.icon className="size-[20px]" strokeWidth={active ? 2.2 : 1.8} />
+                  </span>
+                  <span className={cn("text-[10px] leading-tight", active && "font-medium")}>
+                    {ws.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       )}
-
-      {/* --------------------------------------------------------------- main */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="glass sticky top-0 z-20 flex items-center gap-3 px-4 py-3 lg:hidden">
-          <button
-            className="btn btn-ghost !p-2"
-            onClick={() => setNavOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="size-5" />
-          </button>
-          <span className="truncate text-sm font-semibold">
-            {activeBrand?.name ?? "DOT Cash Book"}
-          </span>
-        </header>
-
-        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-6">{children}</main>
-      </div>
     </div>
+  );
+}
+
+function MenuLink({
+  href,
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  icon: typeof Users;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm hover:bg-white/5"
+    >
+      <Icon className="size-4 text-[var(--fg-muted)]" /> {label}
+    </Link>
   );
 }

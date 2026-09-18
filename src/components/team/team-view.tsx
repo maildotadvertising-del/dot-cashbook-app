@@ -208,7 +208,7 @@ export function TeamView({
           {brands.map((brand) => (
             <Link
               key={brand.id}
-              href={`/b/${brand.id}/settings`}
+              href={`/b/${brand.id}/sales/settings`}
               className="glass glass-hover flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3.5 text-sm"
             >
               <span className="grid size-7 place-items-center rounded-full bg-[var(--accent-soft)] text-[10px] font-bold text-[var(--accent)]">

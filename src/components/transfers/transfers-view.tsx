@@ -13,15 +13,19 @@ export function TransfersView({
   brands,
   accounts,
   transfers,
+  defaultFromBrand,
 }: {
   brands: Brand[];
   accounts: Account[];
   transfers: Transfer[];
+  defaultFromBrand?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [fromBrand, setFromBrand] = useState<string | null>(brands[0]?.id ?? null);
-  const [toBrand, setToBrand] = useState<string | null>(brands[1]?.id ?? null);
+  const [fromBrand, setFromBrand] = useState<string | null>(defaultFromBrand ?? brands[0]?.id ?? null);
+  const [toBrand, setToBrand] = useState<string | null>(
+    brands.find((b) => b.id !== (defaultFromBrand ?? brands[0]?.id))?.id ?? null,
+  );
   const [fromAccount, setFromAccount] = useState<string | null>(null);
   const [toAccount, setToAccount] = useState<string | null>(null);
   const [amount, setAmount] = useState("");

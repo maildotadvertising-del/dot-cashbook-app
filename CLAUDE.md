@@ -32,8 +32,23 @@ single-business. Multi-user, GST-aware, works on mobile/tablet/web.
 - **GitHub repo:** https://github.com/maildotadvertising-del/dot-cashbook-app
   (renamed from `zeebas-cashbook-app`; was empty except README when we
   started).
-- **Theme:** iOS "Liquid Glass" style — translucent/frosted glass UI
-  (backdrop-filter blur, layered translucency), Apple-style.
+- **Theme:** the **DOT Team App theme** — follow `DOT-Team-App-THEME.md`
+  exactly (dark-only near-black with blue/purple glow, 0.05 frosted glass
+  cards with 0.5px hairlines, Apple system colours, DM Sans + DM Mono). No
+  light mode, no new colours. Implemented in `src/app/globals.css`.
+- **Navigation:** DaVinci-Resolve-style bottom dock with three workspaces,
+  each with its own sub-tabs and its **own settings** (defined in
+  `WORKSPACES` in `src/components/shell.tsx`):
+  1. **Items** — products & services with purchase price + sale price
+     (margin shown); settings = default GST %, default unit.
+  2. **Quotation & Invoices** — invoices, quotations; settings = invoice
+     header (brand/legal name, GSTIN, address), number prefixes, default
+     notes/terms.
+  3. **Accounts** — dashboard, cash book, parties, purchase bills, fund
+     transfers, review, reports; settings = accounts, categories, payment
+     modes, UPI auto-capture.
+  Brand switcher, Team, All-brands overview, sign-out live in the top bar.
+  Existing categories are left untouched.
 
 ## Feature list (confirmed)
 
