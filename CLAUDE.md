@@ -195,21 +195,30 @@ Tests (`npm test`):
   storage stubs and checks signup, RLS, permissions, invoice numbering and
   payment status.
 
+## Deployment (live since 2026-09-18)
+
+- **Live app:** https://dot-cashbook-app.vercel.app (Vercel project
+  `dot-cashbook-app`, Hobby, functions pinned to Mumbai `bom1` via
+  `vercel.json`, auto-deploys on push to `main`).
+- **Supabase:** project `dot-cashbook` (ref `grhwylmjrmvlnnaqtrlt`, org "DOT
+  Advertising", region ap-south-1 Mumbai). Schema applied from
+  `supabase/setup-all.sql`. Auth Site URL = the Vercel URL; redirect allow
+  list has `http://localhost:3000/**`.
+- Env vars live in `.env.local` (gitignored) and in Vercel project settings.
+  `NEXT_PUBLIC_*` are inlined at build time — changing them on Vercel needs a
+  redeploy **without** build cache. Vercel auto-detects `.env.example` on
+  import and pre-fills its placeholders; that caused the first deploy to 500.
+- Owner account created; company "Zeebas Cluster LLP", brand "DOT
+  Advertising" (GSTIN 33AAEFZ1730G1ZF) exist in production data.
+
 ## Next steps
 
-1. ✅ Supabase project `dot-cashbook` created (org "DOT Advertising", region
-   Mumbai, 2026-09-18). Still needed from the user:
-   Project URL, anon key, service_role key → `.env.local` (see
-   `.env.example`).
-2. Paste `supabase/setup-all.sql` (all migrations concatenated, verified to
-   apply as one script) into the Supabase SQL editor and run it once.
-   Regenerate it whenever a migration is added.
-3. `npm run dev`, sign up as owner, create brands, walk every screen with
-   real data (nothing past the login page has been seen rendered yet).
-4. Connect the repo to Vercel; add the same env vars.
-5. Inbound email provider (Cloudflare Email Workers / Postmark / Mailgun) →
+1. Rotate the Supabase secret key (it was pasted into chat twice).
+2. Inbound email provider (Cloudflare Email Workers / Postmark / Mailgun) →
    POST `/api/inbound` with `x-webhook-secret`; set
-   `NEXT_PUBLIC_INBOUND_DOMAIN`; walk the user through Gmail forwarding.
+   `NEXT_PUBLIC_INBOUND_DOMAIN`; set up Gmail forwarding.
+3. Walk the remaining flows on production with real data (invoice create →
+   PDF, payments, transfers between two real brands, team invite).
 
 Not built yet: PDF statement import (Excel/CSV only), Zoho Books/Tally
 integrations, entry move/copy between books UI (server action

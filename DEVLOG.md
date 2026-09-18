@@ -2,6 +2,23 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-18 (go-live)
+
+- Supabase project created by the user; schema applied via SQL editor;
+  owner signed up; DOT Advertising brand created. All 18 screens verified
+  rendering against real data.
+- Performance pass: pages went from 0.5–1.1s to ~0.12–0.4s locally by
+  replacing auth-server `getUser` with local `getClaims`, caching the client
+  and permissions per request, parallelising queries, and dropping the
+  redundant client `router.refresh()` after server actions.
+- Fixed: entry form wiped itself when an inline-created party/category
+  refreshed the page; dropdown menus unreadable inside glass modals.
+- Deployed to Vercel (Mumbai region). First deploy 500'd on placeholder env
+  vars imported from `.env.example`; replaced with real ones and redeployed.
+- Dev server on the SMB share is unreliable with a cold Turbopack cache; the
+  user chose to keep the project on the share, so local testing uses
+  `next build && next start`.
+
 ## 2026-09-17 / 18
 
 - Built the remaining "not yet" list: purchase bills, auto-import review
