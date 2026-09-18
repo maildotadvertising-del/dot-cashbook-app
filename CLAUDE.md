@@ -197,10 +197,13 @@ Tests (`npm test`):
 
 ## Next steps
 
-1. **User creates a Supabase project** (free tier, region Mumbai) and shares
+1. ✅ Supabase project `dot-cashbook` created (org "DOT Advertising", region
+   Mumbai, 2026-09-18). Still needed from the user:
    Project URL, anon key, service_role key → `.env.local` (see
    `.env.example`).
-2. Apply `supabase/migrations/0001…0005` in order in the Supabase SQL editor.
+2. Paste `supabase/setup-all.sql` (all migrations concatenated, verified to
+   apply as one script) into the Supabase SQL editor and run it once.
+   Regenerate it whenever a migration is added.
 3. `npm run dev`, sign up as owner, create brands, walk every screen with
    real data (nothing past the login page has been seen rendered yet).
 4. Connect the repo to Vercel; add the same env vars.
