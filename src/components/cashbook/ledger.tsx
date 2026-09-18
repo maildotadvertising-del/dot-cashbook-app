@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeftRight,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -17,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 import { EntryModal } from "@/components/cashbook/entry-modal";
+import { LabelChips } from "@/components/labels";
+import { TransferModal } from "@/components/transfers/transfer-modal";
 import { Combo } from "@/components/combo";
 import { EmptyState, Field, GlassCard, PageHeader, Pill, StatCard } from "@/components/ui";
 import { cn, formatDate, money } from "@/lib/utils";
@@ -27,6 +30,8 @@ import type {
   Category,
   Direction,
   PaymentMode,
+  Label,
+  CategoryRule,
   Party,
   TransactionRow,
 } from "@/lib/types";
@@ -53,6 +58,8 @@ export function Ledger({
   canWrite,
   canManage,
   showBalances,
+  labels,
+  rules,
 }: {
   brand: Brand;
   transactions: TransactionRow[];
@@ -68,7 +75,10 @@ export function Ledger({
   canWrite: boolean;
   canManage: boolean;
   showBalances: boolean;
+  labels: Label[];
+  rules: CategoryRule[];
 }) {
+  const [transferOpen, setTransferOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -81,7 +91,7 @@ export function Ledger({
   const [search, setSearch] = useState(params.get("q") ?? "");
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const activeFilters = ["from", "to", "dir", "account", "party", "category", "mode"].filter(
+  const activeFilters = ["from", "to", "dir", "account", "party", "category", "mode", "label"].filter(
     (key) => params.get(key),
   ).length;
 
@@ -112,6 +122,7 @@ export function Ledger({
         Category: t.category?.name ?? "",
         Mode: t.payment_mode?.name ?? "",
         Account: t.account?.name ?? "",
+        Labels: (t.label_ids ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter(Boolean).join(", "),
         "Cash In": t.direction === "in" ? Number(t.amount) : "",
         "Cash Out": t.direction === "out" ? Number(t.amount) : "",
       })),
@@ -142,6 +153,10 @@ export function Ledger({
                 </button>
                 <button className="btn btn-out" onClick={() => openNew("out")}>
                   <Minus className="size-4" /> Cash Out
+                </button>
+                <button className="btn btn-ghost" onClick={() => setTransferOpen(true)}>
+                  <ArrowLeftRight className="size-4" />
+                  <span className="hidden sm:inline">Transfer</span>
                 </button>
               </>
             )}
@@ -248,6 +263,16 @@ export function Ledger({
                 placeholder="All categories"
               />
             </Field>
+            {labels.length > 0 && (
+              <Field label="Label">
+                <Combo
+                  options={labels.map((l) => ({ id: l.id, label: l.name }))}
+                  value={params.get("label")}
+                  onChange={(v) => setParam({ label: v })}
+                  placeholder="All labels"
+                />
+              </Field>
+            )}
 
             {activeFilters > 0 && (
               <button
@@ -255,7 +280,7 @@ export function Ledger({
                 onClick={() =>
                   setParam({
                     from: null, to: null, dir: null, account: null,
-                    party: null, category: null, mode: null, q: null,
+                    party: null, category: null, mode: null, label: null, q: null,
                   })
                 }
               >
@@ -314,6 +339,11 @@ export function Ledger({
                       {t.category?.name ? ` · ${t.category.name}` : ""}
                       {t.payment_mode?.name ? ` · ${t.payment_mode.name}` : ""}
                     </span>
+                    {t.label_ids?.length > 0 && (
+                      <span className="mt-1 block">
+                        <LabelChips labels={labels} ids={t.label_ids} />
+                      </span>
+                    )}
                   </span>
                   <span
                     className={cn(
@@ -361,6 +391,7 @@ export function Ledger({
                           {t.source === "transfer" && <Pill tone="accent">transfer</Pill>}
                           {t.needs_review && <Pill tone="warn">review</Pill>}
                           {t.bill_url && <Paperclip className="size-3.5" aria-label="Bill attached" />}
+                          <LabelChips labels={labels} ids={t.label_ids ?? []} />
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--fg-muted)]">{t.category?.name ?? "—"}</td>
@@ -415,6 +446,17 @@ export function Ledger({
         categories={categories}
         parties={parties}
         paymentModes={paymentModes}
+        labels={labels}
+        rules={rules}
+      />
+
+      <TransferModal
+        key={transferOpen ? "transfer-open" : "transfer-closed"}
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        brandId={brand.id}
+        brands={[brand]}
+        accounts={accounts}
       />
     </div>
   );

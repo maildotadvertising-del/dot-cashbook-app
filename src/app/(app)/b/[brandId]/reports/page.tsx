@@ -38,12 +38,14 @@ export default async function ReportsPage({
     { data: partyBalances },
     { data: gstDocs },
     { data: balances },
+    { data: labelRows },
+    { data: payeeRows },
+    { data: monthRows },
   ] = await Promise.all([
-    supabase.rpc("ledger_summary", {
+    supabase.rpc("pl_summary", {
       target_brand: brandId,
       from_date: from,
       to_date: to,
-      account: null,
     }),
     supabase.rpc("category_totals", {
       target_brand: brandId,
@@ -62,6 +64,9 @@ export default async function ReportsPage({
       .lte("doc_date", to)
       .order("doc_date"),
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
+    supabase.rpc("label_totals", { target_brand: brandId, from_date: from, to_date: to }),
+    supabase.rpc("payee_totals", { target_brand: brandId, from_date: from, to_date: to, max_rows: 8 }),
+    supabase.rpc("monthly_totals", { target_brand: brandId, months: 6 }),
   ]);
 
   const totals = summary?.[0] ?? { total_in: 0, total_out: 0, net: 0 };
@@ -109,6 +114,36 @@ export default async function ReportsPage({
         name: b.name as string,
         balance: Number(b.balance),
       }))}
+      analytics={{
+        categories: (categories ?? []).map(
+          (c: { category_name: string; direction: string; total: number }) => ({
+            name: c.category_name,
+            direction: c.direction as "in" | "out",
+            total: Number(c.total),
+          }),
+        ),
+        labels: (labelRows ?? []).map(
+          (l: { label_name: string; color: string; direction: string; total: number }) => ({
+            name: l.label_name,
+            color: l.color,
+            direction: l.direction as "in" | "out",
+            total: Number(l.total),
+          }),
+        ),
+        payees: (payeeRows ?? []).map(
+          (r: { payee: string; direction: string; total: number; entries: number }) => ({
+            payee: r.payee,
+            direction: r.direction as "in" | "out",
+            total: Number(r.total),
+            entries: Number(r.entries),
+          }),
+        ),
+        months: (monthRows ?? []).map((m: { month: string; total_in: number; total_out: number }) => ({
+          month: m.month,
+          in: Number(m.total_in),
+          out: Number(m.total_out),
+        })),
+      }}
     />
   );
 }

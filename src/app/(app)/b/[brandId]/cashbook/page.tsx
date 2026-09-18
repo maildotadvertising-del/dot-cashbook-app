@@ -42,6 +42,7 @@ export default async function CashbookPage({
   if (sp.party) query = query.eq("party_id", sp.party);
   if (sp.category) query = query.eq("category_id", sp.category);
   if (sp.mode) query = query.eq("payment_mode_id", sp.mode);
+  if (sp.label) query = query.contains("label_ids", [sp.label]);
   if (sp.q) query = query.or(`remark.ilike.%${sp.q}%,counterparty.ilike.%${sp.q}%`);
 
   const [
@@ -54,6 +55,8 @@ export default async function CashbookPage({
     { data: summary },
     { data: balances },
     perms,
+    { data: labels },
+    { data: rules },
   ] = await Promise.all([
     supabase.from("brands").select("*").eq("id", brandId).single(),
     query,
@@ -69,6 +72,8 @@ export default async function CashbookPage({
     }),
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
     brandPermissions(supabase, brandId),
+    supabase.from("labels").select("*").eq("brand_id", brandId).order("name"),
+    supabase.from("category_rules").select("*").eq("brand_id", brandId).eq("is_active", true),
   ]);
 
   if (!brand) notFound();
@@ -95,6 +100,8 @@ export default async function CashbookPage({
       canWrite={perms?.can_write ?? false}
       canManage={perms?.can_manage ?? false}
       showBalances={perms?.can_reports ?? false}
+      labels={labels ?? []}
+      rules={rules ?? []}
     />
   );
 }

@@ -182,6 +182,37 @@ if (failures === 0) {
   const [bal] = await as<{ balance: string }>(OWNER, `select balance from account_balances where account_id = $1`, [cashA.id]);
   check("account balance reflects both entries", Number(bal?.balance) === 950);
 
+  // --- labels, rules, recurring, same-brand transfers ------------------------
+  const [bankA] = await as<{ id: string }>(OWNER, `insert into accounts (brand_id, name, type) values ($1, 'Bank', 'bank') returning id`, [brandA.id]);
+  const [xfer] = await as<{ id: string }>(OWNER, `insert into transfers (company_id, from_brand_id, to_brand_id, from_account_id, to_account_id, amount) values ($1, $2, $2, $3, $4, 200) returning id`, [owner.company_id, brandA.id, cashA.id, bankA.id]);
+  check("transfer between two accounts of one brand is allowed", !!xfer?.id);
+  await expectError("transfer into the same account is rejected", () =>
+    as(OWNER, `insert into transfers (company_id, from_brand_id, to_brand_id, from_account_id, to_account_id, amount) values ($1, $2, $2, $3, $3, 5)`, [owner.company_id, brandA.id, cashA.id]),
+    /transfers_distinct_ends/);
+
+  await as(OWNER, `insert into transactions (brand_id, account_id, direction, amount, source, transfer_id) values ($1, $2, 'out', 200, 'transfer', $4), ($1, $3, 'in', 200, 'transfer', $4)`, [brandA.id, cashA.id, bankA.id, xfer.id]);
+  const [pl] = await as<{ total_in: string; total_out: string }>(OWNER, `select * from pl_summary($1)`, [brandA.id]);
+  const [cb] = await as<{ total_in: string }>(OWNER, `select * from ledger_summary($1)`, [brandA.id]);
+  check("P&L ignores own-account transfers", Number(pl?.total_in) === 1000 && Number(pl?.total_out) === 50, JSON.stringify(pl));
+  check("cash book totals still include them", Number(cb?.total_in) === 1200, JSON.stringify(cb));
+
+  const [label] = await as<{ id: string }>(OWNER, `insert into labels (brand_id, name) values ($1, 'Office Expenses') returning id`, [brandA.id]);
+  await as(OWNER, `update transactions set label_ids = array[$1::uuid] where brand_id = $2 and direction = 'in' and source <> 'transfer'`, [label.id, brandA.id]);
+  await as(OWNER, `insert into category_rules (brand_id, name, keywords, label_ids) values ($1, 'Tea', array['tea'], array[$2::uuid])`, [brandA.id, label.id]);
+  const byLabel = await as<{ total: string }>(OWNER, `select * from label_totals($1, current_date - 60, current_date)`, [brandA.id]);
+  check("label_totals sums labelled entries", byLabel.length === 1 && Number(byLabel[0].total) === 1000, JSON.stringify(byLabel));
+  await as(OWNER, `delete from labels where id = $1`, [label.id]);
+  const [leftover] = await as<{ n: string }>(OWNER, `select count(*) as n from transactions where $1 = any(label_ids)`, [label.id]);
+  const [ruleLeft] = await as<{ n: string }>(OWNER, `select count(*) as n from category_rules where $1 = any(label_ids)`, [label.id]);
+  check("deleting a label strips it from entries and rules", Number(leftover?.n) === 0 && Number(ruleLeft?.n) === 0);
+
+  const months = await as(OWNER, `select * from monthly_totals($1, 6)`, [brandA.id]);
+  check("monthly_totals returns six months", months.length === 6, months.length);
+
+  await expectError("staff without brand access cannot add rules to it", () =>
+    as(STAFF, `insert into category_rules (brand_id, name, keywords) values ($1, 'x', array['x'])`, [brandB.id]),
+    /row-level security/i);
+
   // --- receipts storage ------------------------------------------------------
   await as(OWNER, `update brand_members set role = 'operator' where user_id = $1`, [STAFF]);
   await as(STAFF, `insert into storage.objects (bucket_id, name) values ('receipts', $1)`, [`${brandA.id}/a.jpg`]);

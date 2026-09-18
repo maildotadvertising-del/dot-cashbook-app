@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseBankAlert } from "@/lib/bank-parser";
+import { loadClassifier } from "@/lib/auto-classify";
 
 /**
  * Receives forwarded bank/UPI alert emails and turns them into cash book
@@ -113,17 +114,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No account" }, { status: 422 });
   }
 
-  // Reuse how this counterparty was categorised last time, so repeat payments
-  // land fully filled in rather than needing the same edits again.
-  const matchKey = (parsed.counterparty ?? "").toLowerCase().trim();
-  const { data: rule } = matchKey
-    ? await supabase
-        .from("counterparty_rules")
-        .select("party_id, category_id, payment_mode_id")
-        .eq("brand_id", inbound.brand_id)
-        .eq("match_key", matchKey)
-        .maybeSingle()
-    : { data: null };
+  // A counterparty a human already confirmed wins; keyword rules (Tea → Tea &
+  // Snacks) fill in the rest, so repeat payees land fully classified.
+  const classify = await loadClassifier(supabase, inbound.brand_id);
+  const auto = classify({
+    text: `${parsed.note ?? ""} ${body.slice(0, 2000)}`,
+    counterparty: parsed.counterparty,
+    direction: parsed.direction,
+  });
 
   const { data: transaction, error } = await supabase
     .from("transactions")
@@ -136,9 +134,7 @@ export async function POST(request: NextRequest) {
       remark: parsed.note ?? parsed.counterparty ?? "Bank alert",
       counterparty: parsed.counterparty,
       bank_ref: parsed.bankRef,
-      party_id: rule?.party_id ?? null,
-      category_id: rule?.category_id ?? null,
-      payment_mode_id: rule?.payment_mode_id ?? null,
+      ...auto,
       source: "email",
       needs_review: true,
     })

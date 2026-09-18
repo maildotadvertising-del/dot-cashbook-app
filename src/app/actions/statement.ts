@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { fallbackRef, type StatementRow } from "@/lib/statement";
+import { loadClassifier } from "@/lib/auto-classify";
 
 const CHUNK = 400;
 
@@ -42,15 +43,11 @@ export async function importStatement(input: {
     data?.forEach((d) => d.bank_ref && existing.add(d.bank_ref));
   }
 
-  const { data: rules } = await supabase
-    .from("counterparty_rules")
-    .select("match_key, party_id, category_id, payment_mode_id")
-    .eq("brand_id", input.brand_id);
-  const ruleFor = new Map((rules ?? []).map((r) => [r.match_key, r]));
+  const classify = await loadClassifier(supabase, input.brand_id);
 
   const fresh = keyed.filter((r) => !existing.has(r.ref));
   const records = fresh.map((row) => {
-    const rule = row.counterparty ? ruleFor.get(row.counterparty.toLowerCase().trim()) : undefined;
+    const auto = classify({ text: row.narration, counterparty: row.counterparty, direction: row.direction });
     return {
       brand_id: input.brand_id,
       account_id: input.account_id,
@@ -60,9 +57,7 @@ export async function importStatement(input: {
       remark: (row.note ?? row.counterparty ?? row.narration).slice(0, 200) || null,
       counterparty: row.counterparty,
       bank_ref: row.ref,
-      party_id: rule?.party_id ?? null,
-      category_id: rule?.category_id ?? null,
-      payment_mode_id: rule?.payment_mode_id ?? null,
+      ...auto,
       source: "statement" as const,
       needs_review: true,
       created_by: user?.id ?? null,

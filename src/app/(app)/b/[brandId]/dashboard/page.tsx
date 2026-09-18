@@ -8,6 +8,12 @@ import { CashflowChart } from "@/components/dashboard/cashflow-chart";
 import { formatDate, money } from "@/lib/utils";
 import type { TransactionRow } from "@/lib/types";
 
+function weekAhead() {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().slice(0, 10);
+}
+
 function monthRange() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -36,15 +42,16 @@ export default async function DashboardPage({
     { data: recent },
     { data: partyBalances },
     { data: openDocs },
+    { data: dueRecurring },
   ] = await Promise.all([
     supabase.from("brands").select("*").eq("id", brandId).single(),
     brandPermissions(supabase, brandId),
     supabase.from("account_balances").select("*").eq("brand_id", brandId),
-    supabase.rpc("ledger_summary", {
+    // Income/expense for the month leave out transfers between own accounts.
+    supabase.rpc("pl_summary", {
       target_brand: brandId,
       from_date: start,
       to_date: end,
-      account: null,
     }),
     supabase.rpc("daily_totals", {
       target_brand: brandId,
@@ -69,6 +76,14 @@ export default async function DashboardPage({
       .eq("doc_type", "invoice")
       .in("status", ["sent", "partial"])
       .order("due_date", { ascending: true })
+      .limit(5),
+    supabase
+      .from("recurring_entries")
+      .select("id, name, amount, direction, next_due")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .lte("next_due", weekAhead())
+      .order("next_due")
       .limit(5),
   ]);
 
@@ -126,6 +141,35 @@ export default async function DashboardPage({
           <StatCard label="Payable" value={payable} tone="out" hint="You owe suppliers" />
         </div>
       </div>
+
+      {!!dueRecurring?.length && (
+        <GlassCard className="mt-3 tint-warn">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-medium">Recurring due this week</h2>
+            <Link
+              href={`/b/${brandId}/recurring`}
+              className="flex items-center gap-1 text-xs font-medium text-[var(--accent)]"
+            >
+              Post / skip <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
+          <div className="flex flex-col divide-y-[0.5px] divide-[var(--hairline)]">
+            {dueRecurring.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 py-2">
+                <span className="min-w-0 flex-1 truncate text-sm">{r.name}</span>
+                <Pill tone={r.next_due < today ? "out" : "warn"}>
+                  {r.next_due < today ? "overdue" : formatDate(r.next_due)}
+                </Pill>
+                <span
+                  className={`money text-sm ${r.direction === "in" ? "text-[var(--in)]" : "text-[var(--out)]"}`}
+                >
+                  ₹{money(r.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
 
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         <GlassCard>

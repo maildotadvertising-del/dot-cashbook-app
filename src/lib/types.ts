@@ -119,6 +119,7 @@ export interface Transaction {
   counterparty: string | null;
   needs_review: boolean;
   transfer_id: string | null;
+  label_ids: string[];
   created_by: string | null;
   created_at: string;
 }
@@ -137,6 +138,8 @@ export interface Transfer {
   to_brand_id: string;
   from_transaction_id: string | null;
   to_transaction_id: string | null;
+  from_account_id: string | null;
+  to_account_id: string | null;
   amount: number;
   transfer_date: string;
   note: string | null;
@@ -226,3 +229,46 @@ export interface ParsedAlert {
   accountLast4: string | null;
   bank: string | null;
 }
+
+export interface Label {
+  id: string;
+  brand_id: string;
+  name: string;
+  color: string;
+}
+
+export interface CategoryRule {
+  id: string;
+  brand_id: string;
+  name: string;
+  keywords: string[];
+  direction: Direction | null;
+  category_id: string | null;
+  party_id: string | null;
+  payment_mode_id: string | null;
+  label_ids: string[];
+  sort_order: number;
+  is_active: boolean;
+}
+
+export type Frequency = "weekly" | "monthly" | "quarterly" | "yearly";
+
+export interface RecurringEntry {
+  id: string;
+  brand_id: string;
+  name: string;
+  direction: Direction;
+  amount: number;
+  account_id: string;
+  category_id: string | null;
+  party_id: string | null;
+  payment_mode_id: string | null;
+  label_ids: string[];
+  remark: string | null;
+  frequency: Frequency;
+  next_due: string;
+  is_active: boolean;
+}
+
+/** Label colours are limited to the theme accents (DOT-Team-App-THEME.md). */
+export const LABEL_COLORS = ["#0A84FF", "#30D158", "#FF9F0A", "#FF453A", "#BF5FFF"];

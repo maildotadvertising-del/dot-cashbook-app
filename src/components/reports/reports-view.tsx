@@ -7,6 +7,7 @@ import { Field, GlassCard, PageHeader, StatCard } from "@/components/ui";
 import { exportSheets } from "@/lib/export";
 import { cn, formatDate, money } from "@/lib/utils";
 import type { Brand } from "@/lib/types";
+import { Analytics, type AnalyticsData } from "@/components/reports/analytics";
 
 interface CategoryRow {
   name: string;
@@ -28,6 +29,7 @@ interface GstRow {
 }
 
 const TABS = [
+  { id: "analytics", label: "Analytics" },
   { id: "pl", label: "Profit & Loss" },
   { id: "cash", label: "Cash Flow" },
   { id: "parties", label: "Outstanding" },
@@ -43,6 +45,7 @@ export function ReportsView({
   parties,
   gstDocs,
   balances,
+  analytics,
 }: {
   brand: Brand;
   from: string;
@@ -52,12 +55,13 @@ export function ReportsView({
   parties: { name: string; balance: number }[];
   gstDocs: GstRow[];
   balances: { name: string; balance: number }[];
+  analytics: AnalyticsData;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("pl");
+  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("analytics");
 
   function setRange(key: "from" | "to", value: string) {
     const next = new URLSearchParams(params.toString());
@@ -190,6 +194,8 @@ export function ReportsView({
       </div>
 
       <div className="mt-3">
+        {tab === "analytics" && <Analytics data={analytics} />}
+
         {tab === "pl" && (
           <div className="grid gap-3 lg:grid-cols-2">
             <ReportTable

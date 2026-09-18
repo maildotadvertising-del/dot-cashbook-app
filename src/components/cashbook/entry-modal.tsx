@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Paperclip, Trash2, X } from "lucide-react";
+import { Loader2, Paperclip, Sparkles, Trash2, X } from "lucide-react";
 import { Combo } from "@/components/combo";
 import { Field, Modal } from "@/components/ui";
+import { LabelPicker } from "@/components/labels";
+import { matchRule } from "@/lib/rules";
 import {
   createTransaction,
   deleteTransaction,
@@ -16,7 +18,9 @@ import { cn, todayISO } from "@/lib/utils";
 import type {
   Account,
   Category,
+  CategoryRule,
   Direction,
+  Label,
   PaymentMode,
   Party,
   TransactionRow,
@@ -32,6 +36,8 @@ export function EntryModal({
   categories,
   parties,
   paymentModes,
+  labels,
+  rules,
 }: {
   open: boolean;
   onClose: () => void;
@@ -42,6 +48,8 @@ export function EntryModal({
   categories: Category[];
   parties: Party[];
   paymentModes: PaymentMode[];
+  labels: Label[];
+  rules: CategoryRule[];
 }) {
   const [busy, setBusy] = useState(false);
   // Initial values only: the parent remounts this component (via `key`) each
@@ -58,7 +66,21 @@ export function EntryModal({
   const [modeId, setModeId] = useState<string | null>(entry?.payment_mode_id ?? null);
   const [billUrl, setBillUrl] = useState<string | null>(entry?.bill_url ?? null);
   const [uploading, setUploading] = useState(false);
+  const [labelIds, setLabelIds] = useState<string[]>(entry?.label_ids ?? []);
+  const [ruleHint, setRuleHint] = useState<string | null>(null);
 
+  // Auto rules only fill what's still blank, so they never overwrite a choice
+  // already made in the form.
+  function onRemarkChange(value: string) {
+    setRemark(value);
+    const hit = matchRule(rules, value, dir);
+    setRuleHint(hit ? hit.rule.name : null);
+    if (!hit) return;
+    if (!categoryId && hit.rule.category_id) setCategoryId(hit.rule.category_id);
+    if (!partyId && hit.rule.party_id) setPartyId(hit.rule.party_id);
+    if (!modeId && hit.rule.payment_mode_id) setModeId(hit.rule.payment_mode_id);
+    if (!labelIds.length && hit.rule.label_ids.length) setLabelIds(hit.rule.label_ids);
+  }
 
   async function save() {
     const value = Number(amount);
@@ -77,6 +99,7 @@ export function EntryModal({
       category_id: categoryId,
       payment_mode_id: modeId,
       bill_url: billUrl,
+      label_ids: labelIds,
     };
 
     const result = entry
@@ -102,19 +125,19 @@ export function EntryModal({
   return (
     <Modal open={open} onClose={onClose} title={entry ? "Edit entry" : "New entry"}>
       <div className="flex flex-col gap-3.5">
-        <div className="glass grid grid-cols-2 gap-1 rounded-full p-1">
+        <div className="grid grid-cols-2 gap-1.5">
           {(["in", "out"] as const).map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setDir(option)}
               className={cn(
-                "rounded-full py-2 text-sm font-semibold transition",
+                "rounded-[12px] border-[0.5px] py-2.5 text-sm transition-colors",
                 dir === option
                   ? option === "in"
-                    ? "bg-[var(--in)] text-white"
-                    : "bg-[var(--out)] text-white"
-                  : "text-[var(--fg-muted)]",
+                    ? "border-[rgba(48,209,88,0.35)] bg-[var(--in-soft)] font-semibold text-[var(--in)]"
+                    : "border-[rgba(255,69,58,0.35)] bg-[var(--out-soft)] font-semibold text-[var(--out)]"
+                  : "border-[var(--glass-border)] bg-white/5 text-[var(--fg-muted)]",
               )}
             >
               {option === "in" ? "Cash In" : "Cash Out"}
@@ -124,11 +147,11 @@ export function EntryModal({
 
         <Field label="Amount">
           <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-semibold text-[var(--fg-muted)]">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-[var(--fg-muted)]">
               ₹
             </span>
             <input
-              className="field money !pl-8 !text-xl !font-bold"
+              className="field money !pl-8 !text-xl !font-medium"
               type="number"
               inputMode="decimal"
               step="0.01"
@@ -166,9 +189,14 @@ export function EntryModal({
           <input
             className="field"
             value={remark}
-            onChange={(e) => setRemark(e.target.value)}
+            onChange={(e) => onRemarkChange(e.target.value)}
             placeholder="What was this for?"
           />
+          {ruleHint && (
+            <span className="flex items-center gap-1 text-[11px] text-[var(--special)]">
+              <Sparkles className="size-3" /> Filled by auto rule “{ruleHint}”
+            </span>
+          )}
         </Field>
 
         <Field label="Party">
@@ -223,6 +251,10 @@ export function EntryModal({
             />
           </Field>
         </div>
+
+        <Field label="Labels">
+          <LabelPicker brandId={brandId} labels={labels} value={labelIds} onChange={setLabelIds} />
+        </Field>
 
         <div className="flex items-center gap-2">
           {billUrl ? (

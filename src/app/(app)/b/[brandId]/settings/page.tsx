@@ -18,8 +18,16 @@ export default async function SettingsPage({
     redirect(`/b/${brandId}/cashbook`);
   }
 
-  const [{ data: accounts }, { data: categories }, { data: modes }, { data: inbound }, { data: imports }] =
-    await Promise.all([
+  const [
+    { data: accounts },
+    { data: categories },
+    { data: modes },
+    { data: inbound },
+    { data: imports },
+    { data: labels },
+    { data: rules },
+    { data: parties },
+  ] = await Promise.all([
       supabase.from("accounts").select("*").eq("brand_id", brandId).order("sort_order"),
       supabase.from("categories").select("*").eq("brand_id", brandId).order("name"),
       supabase.from("payment_modes").select("*").eq("brand_id", brandId).order("name"),
@@ -30,6 +38,9 @@ export default async function SettingsPage({
         .eq("brand_id", brandId)
         .order("received_at", { ascending: false })
         .limit(10),
+      supabase.from("labels").select("*").eq("brand_id", brandId).order("name"),
+      supabase.from("category_rules").select("*").eq("brand_id", brandId).order("sort_order"),
+      supabase.from("parties").select("*").eq("brand_id", brandId).order("name"),
     ]);
 
   return (
@@ -40,6 +51,9 @@ export default async function SettingsPage({
       paymentModes={modes ?? []}
       inbound={inbound ?? []}
       recentImports={imports ?? []}
+      labels={labels ?? []}
+      rules={rules ?? []}
+      parties={parties ?? []}
     />
   );
 }

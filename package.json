@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx tests/bank-parser.test.mts && tsx tests/statement.test.mts && tsx tests/migrations.test.mts"
+    "test": "tsx tests/bank-parser.test.mts && tsx tests/statement.test.mts && tsx tests/rules.test.mts && tsx tests/migrations.test.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

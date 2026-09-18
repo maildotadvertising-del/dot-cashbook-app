@@ -13,12 +13,16 @@ import {
 } from "@/app/actions/masters";
 import { createInboundAddress, setInboundAccount } from "@/app/actions/inbound";
 import { cn, formatDateTime, money } from "@/lib/utils";
-import type { Account, Brand, Category, PaymentMode } from "@/lib/types";
+import type { Account, Brand, Category, CategoryRule, Label, Party, PaymentMode } from "@/lib/types";
+import { LabelsPanel } from "@/components/settings/labels-panel";
+import { RulesPanel } from "@/components/settings/rules-panel";
 
 const TABS = [
   { id: "accounts", label: "Accounts" },
   { id: "categories", label: "Categories" },
   { id: "modes", label: "Payment modes" },
+  { id: "labels", label: "Labels" },
+  { id: "rules", label: "Auto rules" },
   { id: "integrations", label: "Integrations" },
 ] as const;
 
@@ -36,11 +40,17 @@ export function SettingsView({
   paymentModes,
   inbound,
   recentImports,
+  labels,
+  rules,
+  parties,
 }: {
   brand: Brand;
   accounts: Account[];
   categories: Category[];
   paymentModes: PaymentMode[];
+  labels: Label[];
+  rules: CategoryRule[];
+  parties: Party[];
   inbound: InboundAddress[];
   recentImports: {
     id: string;
@@ -152,6 +162,19 @@ export function SettingsView({
           onAdd={() => setAddOpen("mode")}
           items={paymentModes.map((m) => ({ id: m.id, label: m.name }))}
           onRemove={(id, name) => remove("payment_modes", id, name)}
+        />
+      )}
+
+      {tab === "labels" && <LabelsPanel brandId={brand.id} labels={labels} />}
+
+      {tab === "rules" && (
+        <RulesPanel
+          brandId={brand.id}
+          rules={rules}
+          categories={categories}
+          parties={parties}
+          paymentModes={paymentModes}
+          labels={labels}
         />
       )}
 

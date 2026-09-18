@@ -22,10 +22,10 @@ export default async function TransfersPage({
 
   return (
     <TransfersView
+      brandId={brandId}
       brands={brands ?? []}
       accounts={accounts ?? []}
       transfers={transfers ?? []}
-      defaultFromBrand={brandId}
     />
   );
 }

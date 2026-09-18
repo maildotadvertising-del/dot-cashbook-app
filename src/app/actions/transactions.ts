@@ -15,6 +15,7 @@ export interface TransactionInput {
   category_id?: string | null;
   payment_mode_id?: string | null;
   bill_url?: string | null;
+  label_ids?: string[];
 }
 
 async function currentUserId() {
@@ -167,16 +168,31 @@ export async function createTransfer(input: {
   const supabase = await createClient();
   const userId = await currentUserId();
 
-  if (input.from_brand_id === input.to_brand_id) {
-    return { error: "Pick two different brands" };
+  const sameBrand = input.from_brand_id === input.to_brand_id;
+  if (input.from_account_id === input.to_account_id) {
+    return { error: "Pick two different accounts" };
   }
 
-  const [{ data: fromBrand }, { data: toBrand }] = await Promise.all([
+  const [{ data: fromBrand }, { data: toBrand }, { data: accounts }] = await Promise.all([
     supabase.from("brands").select("id, name, company_id").eq("id", input.from_brand_id).single(),
     supabase.from("brands").select("id, name").eq("id", input.to_brand_id).single(),
+    supabase
+      .from("accounts")
+      .select("id, name, brand_id")
+      .in("id", [input.from_account_id, input.to_account_id]),
   ]);
 
   if (!fromBrand || !toBrand) return { error: "Brand not found" };
+  const fromAccount = accounts?.find((a) => a.id === input.from_account_id);
+  const toAccount = accounts?.find((a) => a.id === input.to_account_id);
+  if (fromAccount?.brand_id !== input.from_brand_id || toAccount?.brand_id !== input.to_brand_id) {
+    return { error: "Account doesn't belong to that brand" };
+  }
+
+  // Within a brand the other side is an account ("Cash → Bank"); across
+  // brands it's the other brand.
+  const outName = sameBrand ? toAccount.name : toBrand.name;
+  const inName = sameBrand ? fromAccount.name : fromBrand.name;
 
   const { data: transfer, error: transferError } = await supabase
     .from("transfers")
@@ -184,6 +200,8 @@ export async function createTransfer(input: {
       company_id: fromBrand.company_id,
       from_brand_id: input.from_brand_id,
       to_brand_id: input.to_brand_id,
+      from_account_id: input.from_account_id,
+      to_account_id: input.to_account_id,
       amount: input.amount,
       transfer_date: input.transfer_date,
       note: input.note?.trim() || null,
@@ -210,16 +228,16 @@ export async function createTransfer(input: {
         brand_id: input.from_brand_id,
         account_id: input.from_account_id,
         direction: "out" as const,
-        remark: input.note?.trim() || `Transfer to ${toBrand.name}`,
-        counterparty: toBrand.name,
+        remark: input.note?.trim() || `Transfer to ${outName}`,
+        counterparty: outName,
       },
       {
         ...base,
         brand_id: input.to_brand_id,
         account_id: input.to_account_id,
         direction: "in" as const,
-        remark: input.note?.trim() || `Transfer from ${fromBrand.name}`,
-        counterparty: fromBrand.name,
+        remark: input.note?.trim() || `Transfer from ${inName}`,
+        counterparty: inName,
       },
     ])
     .select("id, direction");

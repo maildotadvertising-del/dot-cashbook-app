@@ -69,6 +69,7 @@ const WORKSPACES: Workspace[] = [
       { href: "parties", label: "Parties" },
       { href: "bills", label: "Purchase Bills" },
       { href: "transfers", label: "Fund Transfers" },
+      { href: "recurring", label: "Recurring" },
       { href: "review", label: "Review", needs: "manage" },
       { href: "reports", label: "Reports", needs: "reports" },
       { href: "settings", label: "Settings", needs: "manage" },
