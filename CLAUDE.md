@@ -48,6 +48,11 @@ single-business. Multi-user, GST-aware, works on mobile/tablet/web.
      transfers, review, reports; settings = accounts, categories, payment
      modes, UPI auto-capture.
   Brand switcher, Team, All-brands overview, sign-out live in the top bar.
+- **Wallet parity (Accounts workspace):** own-account transfers (Cash Book →
+  Transfer, and Fund Transfers page), labels (Settings → Labels, entry form,
+  cash book filter), keyword auto rules (Settings → Auto rules), Recurring
+  tab, Reports → Analytics. The user does **not** want their Wallet history
+  imported — don't import entries unless they ask.
   Existing categories are left untouched.
 
 ## Feature list (confirmed)

@@ -27,6 +27,11 @@ const FIELDS: { key: keyof ColumnMap; label: string }[] = [
   { key: "amount", label: "Amount (single column)" },
   { key: "drcr", label: "Dr / Cr marker" },
   { key: "ref", label: "Reference no." },
+  { key: "payee", label: "Payee" },
+  { key: "category", label: "Category" },
+  { key: "labels", label: "Labels" },
+  { key: "account", label: "Source account" },
+  { key: "transfer", label: "Transfer flag" },
 ];
 
 export function StatementImport({ brand, accounts }: { brand: Brand; accounts: Account[] }) {
@@ -39,6 +44,9 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
   const [headerIndex, setHeaderIndex] = useState(0);
   const [map, setMap] = useState<ColumnMap | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sourceAccount, setSourceAccount] = useState<string | null>(null);
+  const [skipTransfers, setSkipTransfers] = useState(true);
+  const [createMissing, setCreateMissing] = useState(true);
 
   async function readFile(file: File) {
     try {
@@ -59,9 +67,18 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
   }
 
   const header = grid[headerIndex] ?? [];
-  const rows = useMemo(
+  const parsed = useMemo(
     () => (map ? toStatementRows(grid, headerIndex, map) : []),
     [grid, headerIndex, map],
+  );
+  // App exports (Wallet) hold every account and their internal transfers in
+  // one file; pick the account to bring in and leave transfers out by default.
+  const sourceAccounts = [...new Set(parsed.map((r) => r.sourceAccount).filter(Boolean))] as string[];
+  const hasTransfers = parsed.some((r) => r.isTransfer);
+  const hasNames = parsed.some((r) => r.category || r.labels.length);
+  const rows = parsed.filter(
+    (r) =>
+      (!sourceAccount || r.sourceAccount === sourceAccount) && !(skipTransfers && r.isTransfer),
   );
   const totalIn = rows.filter((r) => r.direction === "in").reduce((s, r) => s + r.amount, 0);
   const totalOut = rows.filter((r) => r.direction === "out").reduce((s, r) => s + r.amount, 0);
@@ -71,7 +88,12 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
     if (!rows.length) return toast.error("No transactions found in this file");
 
     setBusy(true);
-    const result = await importStatement({ brand_id: brand.id, account_id: accountId, rows });
+    const result = await importStatement({
+      brand_id: brand.id,
+      account_id: accountId,
+      rows,
+      createMissing: hasNames && createMissing,
+    });
     setBusy(false);
 
     if (result.error) return toast.error(result.error);
@@ -91,8 +113,8 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
       </Link>
 
       <PageHeader
-        title="Import bank statement"
-        subtitle="Excel or CSV from net banking — re-importing the same file is safe"
+        title="Import statement"
+        subtitle="Bank statement or a Wallet export (Excel/CSV) — re-importing the same file is safe"
       />
 
       <GlassCard>
@@ -169,6 +191,44 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
             </div>
           </GlassCard>
 
+          {(sourceAccounts.length > 0 || hasTransfers || hasNames) && (
+            <GlassCard className="mt-3">
+              <p className="label-caps mb-3">App export options</p>
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                {sourceAccounts.length > 0 && (
+                  <Field label="Only rows from" hint={`${sourceAccounts.length} accounts in this file`}>
+                    <Combo
+                      options={sourceAccounts.map((a) => ({
+                        id: a,
+                        label: a,
+                        hint: `${parsed.filter((r) => r.sourceAccount === a).length}`,
+                      }))}
+                      value={sourceAccount}
+                      onChange={setSourceAccount}
+                      placeholder="All accounts"
+                    />
+                  </Field>
+                )}
+                <div className="flex flex-col gap-2.5 text-sm">
+                  {hasTransfers && (
+                    <Toggle
+                      label="Skip transfers between accounts"
+                      checked={skipTransfers}
+                      onChange={setSkipTransfers}
+                    />
+                  )}
+                  {hasNames && (
+                    <Toggle
+                      label="Create categories & labels that don't exist yet"
+                      checked={createMissing}
+                      onChange={setCreateMissing}
+                    />
+                  )}
+                </div>
+              </div>
+            </GlassCard>
+          )}
+
           <div className="mt-3 grid grid-cols-3 gap-3">
             <StatCard label="Transactions" value={String(rows.length)} />
             <StatCard label="Money in" value={totalIn} tone="in" />
@@ -189,6 +249,7 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
                       <th className="px-4 py-2.5 font-semibold">Date</th>
                       <th className="px-4 py-2.5 font-semibold">Payee</th>
                       <th className="px-4 py-2.5 font-semibold">Note</th>
+                      <th className="px-4 py-2.5 font-semibold">Category</th>
                       <th className="px-4 py-2.5 text-right font-semibold">In</th>
                       <th className="px-4 py-2.5 text-right font-semibold">Out</th>
                     </tr>
@@ -202,6 +263,10 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
                         <td className="max-w-[220px] truncate px-4 py-2">{row.counterparty ?? "—"}</td>
                         <td className="max-w-[240px] truncate px-4 py-2 text-[var(--fg-muted)]">
                           {row.note ?? ""}
+                        </td>
+                        <td className="max-w-[200px] truncate px-4 py-2 text-[var(--fg-muted)]">
+                          {row.category ?? ""}
+                          {row.labels.length ? ` · ${row.labels.join(", ")}` : ""}
                         </td>
                         <td className="money px-4 py-2 text-right text-[var(--in)]">
                           {row.direction === "in" ? `₹${money(row.amount)}` : ""}
@@ -231,5 +296,38 @@ export function StatementImport({ brand, accounts }: { brand: Brand; accounts: A
         </>
       )}
     </div>
+  );
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between gap-3">
+      <span className="font-light">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          "relative h-6 w-[42px] shrink-0 rounded-full transition-colors",
+          checked ? "bg-[var(--green)]" : "bg-white/10",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-[3px] size-[18px] rounded-full bg-white shadow transition-all",
+            checked ? "left-[21px]" : "left-[3px]",
+          )}
+        />
+      </button>
+    </label>
   );
 }

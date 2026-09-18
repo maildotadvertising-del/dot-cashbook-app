@@ -1,3 +1,4 @@
+import * as XLSX from "xlsx";
 import { fallbackRef, findHeader, toStatementRows, type Cell } from "../src/lib/statement.ts";
 
 let failures = 0;
@@ -73,6 +74,25 @@ check(
     fallbackRef({ date: "2025-09-10", amount: 1, direction: "in", narration: "x" }),
   null,
 );
+
+// Wallet by BudgetBakers export: semicolon CSV, signed amounts, app columns
+const walletCsv = [
+  "account;category;currency;amount;ref_currency_amount;type;payment_type;payment_type_local;note;date;gps_latitude;gps_longitude;gps_accuracy_in_meters;warranty_in_month;transfer;payee;labels;envelope_id;custom_category",
+  "DOT Advertising;Tea & Snacks;INR;-40.00;-40.00;Expenses;CASH;Cash;UPI-GVS COFFEE BAR-GVSCOFFEEBAR23@FBL-FDRLXXXXXXX-XXXXXXXXX336-TEA Ref Num: XXXXXXXXXXXX7336;2026-07-31 00:00:00;;;;;false;GVS Coffee Bar;Family Expenses|Office Expenses;;false",
+  "DOT Advertising;Client Payment;INR;125000.00;125000.00;Income;TRANSFER;Bank transfer;Promo work final payment;2026-07-24 15:49:00;;;;;false;Park Kennel;Client Payment;;true",
+  "Savings;Transfer;INR;-5000.00;-5000.00;Expenses;TRANSFER;Bank transfer;Fund rotation;2026-07-16 00:00:00;;;;;true;;;;false",
+].join("\n");
+const wb = XLSX.read(walletCsv, { type: "string", cellDates: true });
+const wRowsRaw = XLSX.utils.sheet_to_json<Cell[]>(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
+const w = findHeader(wRowsRaw);
+const wRows = w ? toStatementRows(wRowsRaw, w.index, w.map) : [];
+check("Wallet CSV header detected", w?.index === 0, w?.map);
+check("Wallet: three rows", wRows.length === 3, wRows);
+check("Wallet: signed amount → expense", wRows[0]?.direction === "out" && wRows[0]?.amount === 40, wRows[0]);
+check("Wallet: category, payee, labels", wRows[0]?.category === "Tea & Snacks" && wRows[0]?.counterparty === "GVS Coffee Bar" && wRows[0]?.labels.join() === "Family Expenses,Office Expenses", wRows[0]);
+check("Wallet: large amount not taken as a ref", wRows[1]?.ref === null && wRows[1]?.amount === 125000 && wRows[1]?.direction === "in", wRows[1]);
+check("Wallet: free-text note kept", wRows[1]?.note === "Promo work final payment", wRows[1]);
+check("Wallet: transfer flag + source account", wRows[2]?.isTransfer === true && wRows[2]?.sourceAccount === "Savings", wRows[2]);
 
 console.log(failures ? `\n${failures} failing` : "\nall passing");
 if (failures) process.exit(1);

@@ -2,6 +2,21 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-18 (Wallet parity)
+
+- Compared against the user's BudgetBakers Wallet (read via the Wallet MCP):
+  they use 133 keyword auto-rules, 19 labels, bank sync, and ~2,254 records;
+  no budgets/goals/recurring. Built: transfers between a brand's own
+  accounts, labels, keyword auto rules (whole-word, first rule wins; applied
+  to email/statement imports and while typing an entry), recurring entries
+  with post/skip, and an Analytics tab. P&L/dashboard totals now exclude
+  own-account transfers (migration 0007, applied live).
+- User explicitly asked **not** to import any Wallet entries — only that the
+  import and transfer options work. Import now also reads Wallet's CSV/Excel
+  export (category, labels, payee, per-account filter, skip transfers,
+  optional create-missing categories/labels); verified with a sample file in
+  the browser without importing. Transfer modal verified without submitting.
+
 ## 2026-09-18 (theme + workspaces)
 
 - Re-themed to the user's DOT Team App design system (`DOT-Team-App-THEME.md`):

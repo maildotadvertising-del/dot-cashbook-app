@@ -12,6 +12,12 @@ export interface ColumnMap {
   /** "Dr"/"Cr" marker column that goes with `amount`. */
   drcr: number | null;
   ref: number | null;
+  /** Columns only app exports have (e.g. Wallet by BudgetBakers). */
+  category: number | null;
+  labels: number | null;
+  payee: number | null;
+  account: number | null;
+  transfer: number | null;
 }
 
 export interface StatementRow {
@@ -22,16 +28,27 @@ export interface StatementRow {
   ref: string | null;
   counterparty: string | null;
   note: string | null;
+  category: string | null;
+  labels: string[];
+  /** Which account the row belonged to in the source app, when exported. */
+  sourceAccount: string | null;
+  isTransfer: boolean;
 }
 
 const HEADER_HINTS: Record<keyof ColumnMap, RegExp> = {
   date: /^(txn|tran|transaction|value)?\s*date$|^date$/i,
-  narration: /narration|description|particulars|details|remarks?/i,
+  narration: /narration|description|particulars|details|remarks?|^note$/i,
   debit: /withdrawal|debit|dr\.?\s*amount|^dr$|paid out/i,
   credit: /deposit|credit|cr\.?\s*amount|^cr$|paid in/i,
   amount: /^(txn|transaction)?\s*amount$/i,
   drcr: /^(dr\s*\/\s*cr|cr\s*\/\s*dr|type)$/i,
-  ref: /ref|chq|cheque|utr/i,
+  // "ref_currency_amount" (Wallet) is money, not a reference number.
+  ref: /^(?!.*currency).*(ref|chq|cheque|utr)/i,
+  category: /^category$/i,
+  labels: /^labels?$/i,
+  payee: /^(payee|counter\s*party)$/i,
+  account: /^account$/i,
+  transfer: /^transfer$/i,
 };
 
 const clean = (cell: Cell) => (cell instanceof Date ? "" : String(cell ?? "").trim());
@@ -52,12 +69,16 @@ export function findHeader(rows: Cell[][]): { index: number; map: ColumnMap } | 
 export function detectColumns(header: Cell[]): ColumnMap {
   const map: ColumnMap = {
     date: null, narration: null, debit: null, credit: null, amount: null, drcr: null, ref: null,
+    category: null, labels: null, payee: null, account: null, transfer: null,
   };
   const labels = header.map(clean);
 
   // Order matters: "Value Date" should not steal "date" from "Txn Date", and
   // "Cr Amount" must be claimed as credit before the generic amount check.
-  for (const key of ["debit", "credit", "drcr", "amount", "date", "narration", "ref"] as const) {
+  for (const key of [
+    "debit", "credit", "drcr", "amount", "date", "narration", "ref",
+    "category", "labels", "payee", "account", "transfer",
+  ] as const) {
     const index = labels.findIndex(
       (label, i) => label && HEADER_HINTS[key].test(label) && !Object.values(map).includes(i),
     );
@@ -191,14 +212,24 @@ export function toStatementRows(rows: Cell[][], headerIndex: number, map: Column
       : null;
     const ref = parsed.ref ?? columnRef;
 
+    // App exports carry their own payee and a free-text note; bank statements
+    // only have the narration, so both come out of parseNarration.
+    const appExport = map.payee !== null || map.category !== null;
+    const payee = map.payee !== null ? clean(row[map.payee]) : "";
+    const labelCell = map.labels !== null ? clean(row[map.labels]) : "";
+
     out.push({
       date,
       direction,
       amount: Math.round(amount * 100) / 100,
       narration,
       ref,
-      counterparty: parsed.counterparty,
-      note: parsed.note,
+      counterparty: payee || parsed.counterparty,
+      note: parsed.note ?? (appExport && narration ? narration : null),
+      category: map.category !== null ? clean(row[map.category]) || null : null,
+      labels: labelCell ? labelCell.split(/[|,;]/).map((l) => l.trim()).filter(Boolean) : [],
+      sourceAccount: map.account !== null ? clean(row[map.account]) || null : null,
+      isTransfer: map.transfer !== null && /^(true|yes|1)$/i.test(clean(row[map.transfer])),
     });
   }
 

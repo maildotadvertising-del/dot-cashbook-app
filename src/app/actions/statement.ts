@@ -4,6 +4,37 @@ import { revalidatePath } from "next/cache";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { fallbackRef, type StatementRow } from "@/lib/statement";
 import { loadClassifier } from "@/lib/auto-classify";
+import { LABEL_COLORS } from "@/lib/types";
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+async function nameResolver(
+  supabase: Supabase,
+  table: "categories" | "labels",
+  brandId: string,
+  wanted: string[],
+  create: boolean,
+) {
+  const { data } = await supabase.from(table).select("id, name").eq("brand_id", brandId);
+  const byName = new Map((data ?? []).map((r) => [String(r.name).toLowerCase(), r.id as string]));
+
+  if (create) {
+    const missing = [...new Set(wanted.map((w) => w.trim()).filter(Boolean))].filter(
+      (name) => !byName.has(name.toLowerCase()),
+    );
+    if (missing.length) {
+      const rows = missing.map((name, i) =>
+        table === "labels"
+          ? { brand_id: brandId, name, color: LABEL_COLORS[(byName.size + i) % LABEL_COLORS.length] }
+          : { brand_id: brandId, name },
+      );
+      const { data: created } = await supabase.from(table).insert(rows).select("id, name");
+      created?.forEach((r) => byName.set(String(r.name).toLowerCase(), r.id as string));
+    }
+  }
+
+  return (name: string) => byName.get(name.trim().toLowerCase()) ?? null;
+}
 
 const CHUNK = 400;
 
@@ -11,6 +42,8 @@ export async function importStatement(input: {
   brand_id: string;
   account_id: string;
   rows: StatementRow[];
+  /** Create categories/labels named in an app export that don't exist yet. */
+  createMissing?: boolean;
 }) {
   const supabase = await createClient();
   const user = await getSessionUser();
@@ -44,10 +77,29 @@ export async function importStatement(input: {
   }
 
   const classify = await loadClassifier(supabase, input.brand_id);
-
   const fresh = keyed.filter((r) => !existing.has(r.ref));
+
+  // App exports (Wallet) name their category and labels; match those to this
+  // brand's by name, case-insensitively. Existing ones are never renamed.
+  const categoryId = await nameResolver(
+    supabase,
+    "categories",
+    input.brand_id,
+    fresh.map((r) => r.category).filter((c): c is string => !!c && !/^transfer$/i.test(c)),
+    input.createMissing ?? false,
+  );
+  const labelId = await nameResolver(
+    supabase,
+    "labels",
+    input.brand_id,
+    fresh.flatMap((r) => r.labels),
+    input.createMissing ?? false,
+  );
+
   const records = fresh.map((row) => {
     const auto = classify({ text: row.narration, counterparty: row.counterparty, direction: row.direction });
+    const fileCategory = row.category ? categoryId(row.category) : null;
+    const fileLabels = row.labels.map(labelId).filter((id): id is string => !!id);
     return {
       brand_id: input.brand_id,
       account_id: input.account_id,
@@ -58,8 +110,11 @@ export async function importStatement(input: {
       counterparty: row.counterparty,
       bank_ref: row.ref,
       ...auto,
+      category_id: fileCategory ?? auto.category_id,
+      label_ids: fileLabels.length ? fileLabels : auto.label_ids,
       source: "statement" as const,
-      needs_review: true,
+      // Already-categorised rows (from an app export) don't need a second look.
+      needs_review: !(fileCategory ?? auto.category_id),
       created_by: user?.id ?? null,
     };
   });
