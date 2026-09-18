@@ -172,7 +172,7 @@ export function Shell({
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
           <Link
             href="/"
-            className="grid size-9 shrink-0 place-items-center rounded-[12px] text-white shadow-[0_8px_24px_rgba(10,132,255,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]"
+            className="grid size-9 shrink-0 place-items-center rounded-[12px] text-white shadow-[0_6px_16px_rgba(10,132,255,0.2),inset_0_1px_0_rgba(255,255,255,0.25)]"
             style={{ background: "linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,60,180,0.9))" }}
             aria-label="Home"
           >
@@ -276,7 +276,7 @@ export function Shell({
                   className={cn(
                     "shrink-0 rounded-full border-[0.5px] px-4 py-1.5 text-[12.5px] transition-all duration-300",
                     active
-                      ? "border-[var(--accent-line)] bg-[linear-gradient(180deg,rgba(10,132,255,0.28),rgba(10,132,255,0.14))] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_14px_-6px_rgba(10,132,255,0.6)]"
+                      ? "border-[var(--accent-line)] bg-[linear-gradient(180deg,rgba(10,132,255,0.28),rgba(10,132,255,0.14))] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_3px_10px_-6px_rgba(10,132,255,0.3)]"
                       : "border-white/[0.08] bg-white/[0.04] font-medium text-[var(--fg-muted)] hover:bg-white/[0.08] hover:text-[var(--fg)]",
                   )}
                 >
@@ -304,7 +304,7 @@ export function Shell({
             {activeIndex >= 0 && (
               <span
                 aria-hidden
-                className="absolute bottom-1.5 left-1.5 top-1.5 rounded-full border-[0.5px] border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_18px_-6px_rgba(10,132,255,0.5)] transition-transform duration-500 [transition-timing-function:var(--spring)]"
+                className="absolute bottom-1.5 left-1.5 top-1.5 rounded-full border-[0.5px] border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_4px_12px_-6px_rgba(10,132,255,0.25)] transition-transform duration-500 [transition-timing-function:var(--spring)]"
                 style={{ width: "calc((100% - 12px) / 3)", transform: `translateX(${activeIndex * 100}%)` }}
               />
             )}

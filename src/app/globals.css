@@ -45,7 +45,7 @@
   /* Specular rim: bright top-left edge fading around the shape. */
   --rim: linear-gradient(
     150deg,
-    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.26) 0%,
     rgba(255, 255, 255, 0.08) 28%,
     rgba(255, 255, 255, 0.03) 55%,
     rgba(255, 255, 255, 0.12) 100%
@@ -113,8 +113,8 @@ h3 {
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 10%, rgba(10, 40, 100, 0.55) 0%, transparent 52%),
-    radial-gradient(ellipse at 85% 90%, rgba(80, 10, 120, 0.4) 0%, transparent 52%),
+    radial-gradient(ellipse at 15% 10%, rgba(10, 40, 100, 0.32) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, rgba(80, 10, 120, 0.22) 0%, transparent 50%),
     var(--bg-base);
 }
 .aurora span {
@@ -128,7 +128,7 @@ h3 {
   height: 560px;
   top: -180px;
   left: -140px;
-  background: radial-gradient(circle, rgba(10, 100, 255, 0.28), transparent 68%);
+  background: radial-gradient(circle, rgba(10, 100, 255, 0.14), transparent 68%);
   animation: drift-a 38s ease-in-out infinite alternate;
 }
 .aurora span:nth-child(2) {
@@ -136,7 +136,7 @@ h3 {
   height: 480px;
   bottom: -160px;
   right: -120px;
-  background: radial-gradient(circle, rgba(140, 40, 230, 0.24), transparent 68%);
+  background: radial-gradient(circle, rgba(140, 40, 230, 0.11), transparent 68%);
   animation: drift-b 44s ease-in-out infinite alternate;
 }
 .aurora span:nth-child(3) {
@@ -144,7 +144,7 @@ h3 {
   height: 420px;
   top: 38%;
   left: 45%;
-  background: radial-gradient(circle, rgba(10, 132, 255, 0.1), transparent 70%);
+  background: radial-gradient(circle, rgba(10, 132, 255, 0.05), transparent 70%);
   animation: drift-c 52s ease-in-out infinite alternate;
 }
 
@@ -253,7 +253,7 @@ select option {
     background: var(--glass-bg-hover);
     box-shadow:
       var(--glass-shadow),
-      0 16px 40px -18px rgba(10, 132, 255, 0.25),
+      0 14px 36px -20px rgba(10, 132, 255, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
@@ -285,27 +285,27 @@ select option {
 /* Coloured stat cards: accent-tinted glass with a soft glow in the corner. */
 @utility tint-in {
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(48, 209, 88, 0.2), transparent 55%),
-    linear-gradient(180deg, rgba(48, 209, 88, 0.1), rgba(48, 209, 88, 0.03));
-  border-color: rgba(48, 209, 88, 0.2);
+    radial-gradient(120% 90% at 100% 0%, rgba(48, 209, 88, 0.09), transparent 55%),
+    linear-gradient(180deg, rgba(48, 209, 88, 0.06), rgba(48, 209, 88, 0.02));
+  border-color: rgba(48, 209, 88, 0.14);
 }
 @utility tint-out {
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(255, 69, 58, 0.2), transparent 55%),
-    linear-gradient(180deg, rgba(255, 69, 58, 0.1), rgba(255, 69, 58, 0.03));
-  border-color: rgba(255, 69, 58, 0.2);
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 69, 58, 0.09), transparent 55%),
+    linear-gradient(180deg, rgba(255, 69, 58, 0.06), rgba(255, 69, 58, 0.02));
+  border-color: rgba(255, 69, 58, 0.14);
 }
 @utility tint-accent {
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(10, 132, 255, 0.24), transparent 55%),
-    linear-gradient(180deg, rgba(10, 132, 255, 0.11), rgba(10, 132, 255, 0.03));
-  border-color: rgba(10, 132, 255, 0.22);
+    radial-gradient(120% 90% at 100% 0%, rgba(10, 132, 255, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(10, 132, 255, 0.06), rgba(10, 132, 255, 0.02));
+  border-color: rgba(10, 132, 255, 0.15);
 }
 @utility tint-warn {
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(255, 159, 10, 0.2), transparent 55%),
-    linear-gradient(180deg, rgba(255, 159, 10, 0.1), rgba(255, 159, 10, 0.03));
-  border-color: rgba(255, 159, 10, 0.2);
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 159, 10, 0.09), transparent 55%),
+    linear-gradient(180deg, rgba(255, 159, 10, 0.06), rgba(255, 159, 10, 0.02));
+  border-color: rgba(255, 159, 10, 0.14);
 }
 
 /* --------------------------------------------------------------- controls */
@@ -349,7 +349,7 @@ select option {
   color: #fff;
   border: 0.5px solid rgba(120, 180, 255, 0.45);
   box-shadow:
-    0 8px 24px -6px rgba(10, 132, 255, 0.55),
+    0 6px 16px -8px rgba(10, 132, 255, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
 
   &:hover:not(:disabled) {
@@ -364,7 +364,7 @@ select option {
     var(--in-soft);
   color: var(--in);
   border: 0.5px solid rgba(48, 209, 88, 0.38);
-  box-shadow: 0 6px 20px -8px rgba(48, 209, 88, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px -8px rgba(48, 209, 88, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-weight: 600;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -376,7 +376,7 @@ select option {
     var(--out-soft);
   color: var(--out);
   border: 0.5px solid rgba(255, 69, 58, 0.38);
-  box-shadow: 0 6px 20px -8px rgba(255, 69, 58, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px -8px rgba(255, 69, 58, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-weight: 600;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
