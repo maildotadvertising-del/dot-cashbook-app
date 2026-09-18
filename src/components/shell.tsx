@@ -30,6 +30,8 @@ interface Tab {
 interface Workspace {
   id: "items" | "sales" | "accounts";
   label: string;
+  /** Dock label — short enough for three tabs on a phone. */
+  short: string;
   icon: typeof Package;
   tabs: Tab[];
 }
@@ -43,6 +45,7 @@ const WORKSPACES: Workspace[] = [
   {
     id: "items",
     label: "Items",
+    short: "Items",
     icon: Package,
     tabs: [
       { href: "items", label: "Products & Services" },
@@ -52,6 +55,7 @@ const WORKSPACES: Workspace[] = [
   {
     id: "sales",
     label: "Quotation & Invoices",
+    short: "Quotes & Invoices",
     icon: FileText,
     tabs: [
       { href: "invoices", label: "Invoices" },
@@ -62,6 +66,7 @@ const WORKSPACES: Workspace[] = [
   {
     id: "accounts",
     label: "Accounts",
+    short: "Accounts",
     icon: Wallet,
     tabs: [
       { href: "dashboard", label: "Dashboard", needs: "reports" },
@@ -121,6 +126,7 @@ export function Shell({
 
   const currentWs = brandIdInPath ? workspaceFor(section) : null;
   const workspace = WORKSPACES.find((w) => w.id === currentWs) ?? null;
+  const activeIndex = WORKSPACES.findIndex((w) => w.id === currentWs);
   const tabs = workspace?.tabs.filter((t) => allowed(t.needs)) ?? [];
 
   // Longest matching tab wins, so "items/settings" beats "items".
@@ -160,7 +166,7 @@ export function Shell({
       {/* ------------------------------------------------------------ top bar */}
       <header
         ref={menusRef}
-        className="sticky top-0 z-30 border-b-[0.5px] border-[var(--hairline)] bg-[var(--nav-bg)] backdrop-blur-[28px]"
+        className="sticky top-0 z-30 border-b-[0.5px] border-white/[0.08] bg-[var(--nav-bg)] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)] backdrop-blur-[30px] backdrop-saturate-[180%]"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
@@ -268,10 +274,10 @@ export function Shell({
                   key={tab.href}
                   href={`/b/${activeBrand.id}/${tab.href}`}
                   className={cn(
-                    "shrink-0 rounded-full border-[0.5px] px-4 py-1.5 text-xs transition-colors",
+                    "shrink-0 rounded-full border-[0.5px] px-4 py-1.5 text-[12.5px] transition-all duration-300",
                     active
-                      ? "border-[var(--accent-line)] bg-[rgba(10,132,255,0.18)] font-medium text-[var(--accent)]"
-                      : "border-[var(--glass-border)] bg-white/5 text-[var(--fg-muted)] hover:text-[var(--fg)]",
+                      ? "border-[var(--accent-line)] bg-[linear-gradient(180deg,rgba(10,132,255,0.28),rgba(10,132,255,0.14))] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_14px_-6px_rgba(10,132,255,0.6)]"
+                      : "border-white/[0.08] bg-white/[0.04] font-medium text-[var(--fg-muted)] hover:bg-white/[0.08] hover:text-[var(--fg)]",
                   )}
                 >
                   {tab.label}
@@ -286,13 +292,22 @@ export function Shell({
         {children}
       </main>
 
-      {/* ------------------------------------------------ DaVinci-style dock */}
+      {/* ---------------------------------- floating dock (iOS-style tab bar) */}
       {activeBrand && (
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 border-t-[0.5px] border-[var(--hairline)] bg-[var(--nav-bg)] backdrop-blur-[28px]"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          aria-label="Workspaces"
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3"
+          style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
         >
-          <div className="mx-auto grid max-w-md grid-cols-3">
+          <div className="glass pointer-events-auto relative grid w-full max-w-[420px] grid-cols-3 rounded-full p-1.5 !shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)]">
+            {/* The lens: a brighter glass pill that springs to the active tab. */}
+            {activeIndex >= 0 && (
+              <span
+                aria-hidden
+                className="absolute bottom-1.5 left-1.5 top-1.5 rounded-full border-[0.5px] border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_18px_-6px_rgba(10,132,255,0.5)] transition-transform duration-500 [transition-timing-function:var(--spring)]"
+                style={{ width: "calc((100% - 12px) / 3)", transform: `translateX(${activeIndex * 100}%)` }}
+              />
+            )}
             {WORKSPACES.map((ws) => {
               const active = ws.id === currentWs;
               return (
@@ -300,20 +315,16 @@ export function Shell({
                   key={ws.id}
                   href={`/b/${activeBrand.id}/${homeFor(ws)}`}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-2 pb-2.5 pt-3 transition-colors",
+                    "relative z-10 flex flex-col items-center gap-0.5 rounded-full px-2 py-2 transition-colors duration-300",
                     active ? "text-[var(--accent)]" : "text-[var(--inactive-icon)] hover:text-[var(--fg)]",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "grid h-8 w-14 place-items-center rounded-full transition-colors",
-                      active && "bg-[var(--accent-soft)]",
-                    )}
-                  >
-                    <ws.icon className="size-[20px]" strokeWidth={active ? 2.2 : 1.8} />
-                  </span>
-                  <span className={cn("text-[10px] leading-tight", active && "font-medium")}>
-                    {ws.label}
+                  <ws.icon
+                    className={cn("size-[21px] transition-transform duration-500 [transition-timing-function:var(--spring)]", active && "scale-110")}
+                    strokeWidth={active ? 2.1 : 1.8}
+                  />
+                  <span className={cn("text-[10.5px] leading-tight tracking-[-0.01em]", active ? "font-semibold" : "font-medium")}>
+                    {ws.short}
                   </span>
                 </Link>
               );

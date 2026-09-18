@@ -1,18 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Mono, DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+// Apple devices render SF Pro (system); everywhere else gets Inter, the
+// closest open face, with tabular figures for money.
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-dm-sans",
-});
-
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-dm-mono",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -32,22 +28,29 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body>
+        <div aria-hidden className="aurora">
+          <span />
+          <span />
+          <span />
+        </div>
         {children}
         <Toaster
           theme="dark"
-          position="bottom-right"
-          offset={{ bottom: 96 }}
-          mobileOffset={{ bottom: 96 }}
+          position="bottom-center"
+          offset={{ bottom: 104 }}
+          mobileOffset={{ bottom: 104 }}
           toastOptions={{
             style: {
-              background: "rgba(10,10,20,0.9)",
-              backdropFilter: "blur(20px)",
-              border: "0.5px solid rgba(48,209,88,0.3)",
-              borderRadius: 12,
+              background: "rgba(22,22,34,0.72)",
+              backdropFilter: "blur(30px) saturate(180%)",
+              WebkitBackdropFilter: "blur(30px) saturate(180%)",
+              border: "0.5px solid rgba(255,255,255,0.14)",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12)",
+              borderRadius: 18,
               color: "#F5F5F7",
-              fontFamily: "var(--font-dm-sans)",
+              fontFamily: "var(--font-sans)",
             },
           }}
         />

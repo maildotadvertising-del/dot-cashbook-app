@@ -32,10 +32,16 @@ single-business. Multi-user, GST-aware, works on mobile/tablet/web.
 - **GitHub repo:** https://github.com/maildotadvertising-del/dot-cashbook-app
   (renamed from `zeebas-cashbook-app`; was empty except README when we
   started).
-- **Theme:** the **DOT Team App theme** — follow `DOT-Team-App-THEME.md`
-  exactly (dark-only near-black with blue/purple glow, 0.05 frosted glass
-  cards with 0.5px hairlines, Apple system colours, DM Sans + DM Mono). No
-  light mode, no new colours. Implemented in `src/app/globals.css`.
+- **Theme:** DOT Team App **colours** (`DOT-Team-App-THEME.md`: dark-only,
+  #0A84FF / #30D158 / #FF453A / #FF9F0A / #BF5FFF, blue+purple glow) rendered
+  as **iPhone "Liquid Glass"** at the user's request (2026-09-18): top-lit
+  translucent glass with a specular rim (`glass::after` mask), heavy blur +
+  saturation, depth shadows, drifting aurora background, floating capsule
+  dock with a spring "lens". **Font is SF Pro on Apple devices, Inter
+  elsewhere** — the user asked for a more professional face, which overrides
+  the theme file's DM Sans. Money uses tabular figures (no monospace).
+  Motion is minimal: staggered rise-in, spring modal sheets, press scale;
+  all disabled under prefers-reduced-motion. Lives in `src/app/globals.css`.
 - **Navigation:** DaVinci-Resolve-style bottom dock with three workspaces,
   each with its own sub-tabs and its **own settings** (defined in
   `WORKSPACES` in `src/components/shell.tsx`):

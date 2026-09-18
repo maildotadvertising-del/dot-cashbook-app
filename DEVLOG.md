@@ -2,6 +2,15 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-18 (liquid glass polish)
+
+- User kept the colours but wanted a richer iPhone liquid-glass look, a more
+  professional font and minimal rich animation. Reworked the surfaces
+  (specular rim, top-lit tint, depth shadows, animated aurora), swapped DM
+  Sans/Mono for SF Pro/Inter with tabular money, made the dock a floating
+  capsule with a sliding lens, and added a staggered rise-in, spring modal
+  sheets and press feedback — all respecting reduced-motion.
+
 ## 2026-09-18 (Wallet parity)
 
 - Compared against the user's BudgetBakers Wallet (read via the Wallet MCP):

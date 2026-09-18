@@ -15,10 +15,10 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+    <div className="rise mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-[19px] font-medium tracking-[-0.3px]">{title}</h1>
-        {subtitle && <p className="text-[13px] font-light text-[var(--fg-muted)]">{subtitle}</p>}
+        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.03em]">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-[13.5px] text-[var(--fg-muted)]">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -69,12 +69,12 @@ export function StatCard({
   }[tone];
 
   return (
-    <div className={cn("glass card rise !rounded-[14px]", tint)}>
+    <div className={cn("glass card rise", tint)}>
       <div className="mb-1.5 flex items-center gap-1.5 text-[var(--fg-muted)]">
         {icon}
         <span className="label-caps">{label}</span>
       </div>
-      <div className={cn("money text-[22px] font-medium tracking-[-0.5px]", toneClass)}>
+      <div className={cn("money text-[24px] font-semibold tracking-[-0.03em]", toneClass)}>
         {typeof value === "number" ? `₹${money(value)}` : value}
       </div>
       {hint && <div className="mt-0.5 truncate text-[11px] text-[var(--fg-muted)]">{hint}</div>}
@@ -96,7 +96,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
       {icon && <div className="mb-1 text-[var(--fg-subtle)]">{icon}</div>}
-      <p className="text-sm font-medium">{title}</p>
+      <p className="text-[15px] font-semibold">{title}</p>
       {description && (
         <p className="max-w-sm text-[13px] text-[var(--fg-muted)]">{description}</p>
       )}
@@ -132,17 +132,18 @@ export function Modal({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/65 backdrop-blur-[10px] sm:items-center sm:p-5">
-      <div className="absolute inset-0" onClick={onClose} />
+    <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center sm:p-5">
+      <div className="backdrop absolute inset-0 bg-black/55 backdrop-blur-[8px]" onClick={onClose} />
       <div
         className={cn(
-          "glass-strong rise relative max-h-[88dvh] w-full overflow-auto rounded-t-[22px] p-5 sm:rounded-[22px]",
+          "glass-strong sheet relative max-h-[88dvh] w-full overflow-auto rounded-t-[28px] p-5 sm:rounded-[28px]",
           wide ? "sm:max-w-3xl" : "sm:max-w-[520px]",
         )}
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
       >
+        <div className="mx-auto -mt-2 mb-3 h-1 w-9 rounded-full bg-white/20 sm:hidden" />
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-[17px] font-medium tracking-[-0.2px]">{title}</h2>
+          <h2 className="text-[19px] font-semibold tracking-[-0.025em]">{title}</h2>
           <button
             onClick={onClose}
             className="grid size-8 place-items-center rounded-full bg-white/5 text-[var(--fg-muted)] hover:text-[var(--fg)]"
