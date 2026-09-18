@@ -213,7 +213,8 @@ Tests (`npm test`):
 
 ## Next steps
 
-1. Rotate the Supabase secret key (it was pasted into chat twice).
+1. (Declined by user 2026-09-18) The Supabase secret key appeared in chat
+   twice; user chose not to rotate it. Re-offer only if something changes.
 2. Inbound email provider (Cloudflare Email Workers / Postmark / Mailgun) →
    POST `/api/inbound` with `x-webhook-secret`; set
    `NEXT_PUBLIC_INBOUND_DOMAIN`; set up Gmail forwarding.
