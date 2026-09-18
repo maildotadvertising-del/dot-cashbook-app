@@ -30,12 +30,19 @@ function LoginForm() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName } },
         });
         if (error) throw error;
+        // With email confirmation on (Supabase's default) there's no session
+        // until the link in the confirmation mail is clicked.
+        if (!data.session) {
+          toast.success("Check your inbox to confirm your email, then sign in");
+          setMode("signin");
+          return;
+        }
         toast.success("Account created");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -79,6 +86,11 @@ function LoginForm() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-[var(--fg-muted)]">Email</span>
+            {mode === "signup" && (
+              <span className="text-[11px] text-[var(--fg-subtle)]">
+                Use the exact email your admin invited
+              </span>
+            )}
             <input
               className="field"
               type="email"
@@ -116,7 +128,7 @@ function LoginForm() {
         >
           {mode === "signup"
             ? "Already have an account? Sign in"
-            : "New here? Create an account"}
+            : "Invited? Create your account"}
         </button>
       </div>
     </main>

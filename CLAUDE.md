@@ -151,60 +151,76 @@ category (Indian SMB cash book). Key takeaways:
 - "MCP Connection settings" = a normal integrations settings page, not a
   literal Model Context Protocol server connection.
 
-## Status (2026-09-16)
+## Status (2026-09-18)
 
-Build is underway. Everything below compiles (`npm run build` passes,
-`npx tsc --noEmit` clean, `npm test` passes) but **nothing has been run
-against a real database yet** — see "Next steps".
+Everything compiles and is tested offline (`npm run build`, `npx tsc
+--noEmit`, `npm test` all pass), but **nothing has run against a live
+Supabase project yet** — that's blocked on the user creating one (see
+"Next steps").
 
-Done:
+Built:
 - Next.js 16 + React 19 + Tailwind v4 + TypeScript, Liquid Glass design
-  system in `src/app/globals.css` (glass utilities, light/dark tokens).
-- Supabase auth (email/password), session refresh in `src/middleware.ts`.
-- Schema in `supabase/migrations/` — 0001 tables + RLS, 0002 balance views
-  and summary functions, 0003 document numbering + payment sync trigger.
-- Company → Brands structure, brand switcher, brand creation with seeded
-  default accounts/categories/payment modes.
-- Cash book ledger: filters, pagination, summary, entry add/edit/delete,
-  inline party/category/mode creation, Excel export.
-- Dashboard with 30-day cash flow chart, receivable/payable, unpaid invoices.
-- Parties list + party statement page. Items catalog.
-- Quotations & invoices: editor with GST/non-GST toggle, auto intra/inter
-  state detection, line items, totals, print-ready view, payment recording
-  that also posts the cash book entry, quotation → invoice conversion.
-- Reports: P&L, cash flow, outstanding, GST summary, multi-sheet Excel export.
-- Settings: brand profile, accounts, categories, payment modes, and the
-  email auto-capture setup screen.
-- Inter-brand fund transfers (paired linked entries) and an all-brands
-  overview.
-- Bank alert email parser (`src/lib/bank-parser.ts`) + inbound webhook at
-  `/api/inbound`, with tests in `tests/bank-parser.test.mts` covering HDFC,
-  SBI, ICICI, Axis, Kotak formats and promotional-mail rejection.
+  system in `src/app/globals.css`. Login verified visually in light/dark and
+  mobile; other screens need a live DB to render.
+- Auth with **invite-only signup**: first signup becomes company owner;
+  later signups need a row in `company_invites` (by email), otherwise they
+  land on a "waiting for invite" screen with no data access.
+- Company → Brands, brand switcher, brand creation with seeded defaults.
+- Cash book ledger (filters, pagination, add/edit/delete, inline master
+  creation, Excel export, receipt photo attach via Supabase Storage).
+- Dashboard, parties + statements, items, quotations, invoices, **purchase
+  bills** (shared document components via `src/lib/doc-meta.ts`), payments
+  that post matching ledger entries, quotation → invoice conversion.
+- Reports (P&L, cash flow, outstanding, GST) with Excel export.
+- Inter-brand fund transfers, all-brands overview.
+- UPI auto-capture: bank alert email parser + `/api/inbound` webhook,
+  **review queue** (`/b/[brand]/review`) that learns counterparty →
+  category/party rules and surfaces the Gmail forwarding code, and
+  **statement import** (`/b/[brand]/import`, Excel/CSV) keyed on the UPI
+  ref so statement + email imports of the same payment can't double up.
+- **Team** page (`/company`): invites, company role (admin/staff), per-brand
+  access with role (admin/operator/viewer) and toggles (edit own, delete
+  own, see others' entries, see balances/reports, backdate rule).
+- **Access control is enforced in Postgres RLS** (migration 0005), not just
+  hidden in UI: viewers are read-only, backdate rules checked in IST,
+  operators edit/delete only their own entries, staff only see their
+  brands, users can't change their own role.
+
+Tests (`npm test`):
+- `tests/bank-parser.test.mts` — alert email formats (HDFC/SBI/ICICI/Axis/
+  Kotak), promo-mail rejection.
+- `tests/statement.test.mts` — statement header detection, Dr/Cr and split
+  columns, Excel dates, UPI narration parsing, ref normalisation.
+- `tests/migrations.test.mts` — applies every migration to PGlite with auth/
+  storage stubs and checks signup, RLS, permissions, invoice numbering and
+  payment status.
 
 ## Next steps
 
-1. **User creates a Supabase project** (free tier) and provides Project URL,
-   anon key, and service_role key. Put them in `.env.local` (see
+1. **User creates a Supabase project** (free tier, region Mumbai) and shares
+   Project URL, anon key, service_role key → `.env.local` (see
    `.env.example`).
-2. Apply `supabase/migrations/*.sql` in order via the Supabase SQL editor.
-3. Run `npm run dev`, sign up (first signup becomes the company owner and
-   creates the company row), create brands, and walk every screen.
-4. Connect the repo to Vercel for instant deploy; add the same env vars there.
-5. Set up inbound email (Cloudflare Email Workers / Postmark / Mailgun) to
-   POST to `/api/inbound` with the `x-webhook-secret` header, then walk the
-   user through the Gmail forwarding filter.
+2. Apply `supabase/migrations/0001…0005` in order in the Supabase SQL editor.
+3. `npm run dev`, sign up as owner, create brands, walk every screen with
+   real data (nothing past the login page has been seen rendered yet).
+4. Connect the repo to Vercel; add the same env vars.
+5. Inbound email provider (Cloudflare Email Workers / Postmark / Mailgun) →
+   POST `/api/inbound` with `x-webhook-secret`; set
+   `NEXT_PUBLIC_INBOUND_DOMAIN`; walk the user through Gmail forwarding.
 
-Not built yet: user/team management UI (invite, roles, per-brand permission
-toggles), receipt/bill photo upload to Supabase Storage, purchase bills
-screen, statement (PDF/CSV) upload fallback importer, and a review queue UI
-for `needs_review` auto-imported entries.
+Not built yet: PDF statement import (Excel/CSV only), Zoho Books/Tally
+integrations, entry move/copy between books UI (server action
+`copyTransaction` exists), activity log viewer.
 
 ## Environment notes
 
 The project lives on an SMB network share (`/Volumes/BackUp`), which matters:
-- Turbopack's persistent cache cannot fsync there, so `.next/cache` is a
-  symlink to `~/.dot-cashbook-cache`. If `.next` is ever deleted, recreate it:
-  `mkdir -p .next && ln -sfn ~/.dot-cashbook-cache .next/cache`.
+- Turbopack's persistent cache cannot fsync there, so both `.next/cache`
+  (build) and `.next/dev/cache` (dev) are symlinks to local dirs. If `.next`
+  is ever deleted, recreate them:
+  `mkdir -p .next/dev && ln -sfn ~/.dot-cashbook-cache .next/cache && ln -sfn ~/.dot-cashbook-dev-cache .next/dev/cache`.
+- The preview tool's `npm run dev` hangs on this share; start the dev server
+  with `node node_modules/next/dist/bin/next dev -p 3000` instead.
 - `node_modules` must be a real directory in the project (npm replaces a
   symlink), so installs are slow but correct.
 
@@ -214,3 +230,13 @@ The project lives on an SMB network share (`/Volumes/BackUp`), which matters:
   added/changed, so any future session (any account) has full context just by
   opening this repo.
 - Commit and push progress regularly so GitHub is always the source of truth.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

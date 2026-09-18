@@ -2,6 +2,25 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-09-17 / 18
+
+- Built the remaining "not yet" list: purchase bills, auto-import review
+  queue (with learned counterparty rules and Gmail code surfacing), bank
+  statement import (Excel/CSV), receipt photo attachments, team management.
+- Found and fixed three access-control holes before any real data existed:
+  any signup silently joined the company, staff could promote themselves
+  via their own profile row, and per-brand permission toggles were UI-only.
+  Signup is now invite-only and permissions are enforced by RLS.
+- Added a PGlite-based migration test so SQL and RLS are verified without a
+  Supabase project; it caught nothing wrong beyond a `pgcrypto` line PGlite
+  can't load (removed — `gen_random_uuid()` is core Postgres).
+- Statement import keys rows on the UPI ref inside the narration (not the
+  bank's ref column, which can be non-unique like "TRANSFER TO 4897"), so a
+  statement and an alert email for the same payment dedupe.
+- Login page checked in the browser (light/dark, mobile). Signup now tells
+  the user to confirm their email when Supabase email confirmation is on.
+- Still waiting on Supabase credentials from the user.
+
 ## 2026-09-16 (build session)
 
 - Build started and the first full pass landed: scaffold, design system,
