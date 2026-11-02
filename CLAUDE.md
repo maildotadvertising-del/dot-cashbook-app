@@ -4,7 +4,11 @@ This file is auto-loaded by Claude Code whenever this repo is opened, from any
 machine or account. It exists so work on this project can continue seamlessly
 across sessions/devices — read this first before doing anything else.
 
-See [DEVLOG.md](./DEVLOG.md) for the dated session-by-session history.
+See [DEVLOG.md](./DEVLOG.md) for the dated session-by-session history, and
+[HANDOFF.md](./HANDOFF.md) for everything that does **not** travel with the
+git clone — credentials, machine setup, the working rules agreed with the
+user, and how to pick the work up in a new session or a different Claude
+account.
 
 ## What this is
 
@@ -179,15 +183,13 @@ category (Indian SMB cash book). Key takeaways:
 
 ## Status (2026-09-18)
 
-Everything compiles and is tested offline (`npm run build`, `npx tsc
---noEmit`, `npm test` all pass), but **nothing has run against a live
-Supabase project yet** — that's blocked on the user creating one (see
-"Next steps").
+Everything compiles and is tested (`npm run build`, `npx tsc --noEmit`,
+`npm test` all pass) and the app is **live on Vercel against the real
+Supabase project** — see "Deployment" below.
 
 Built:
 - Next.js 16 + React 19 + Tailwind v4 + TypeScript, Liquid Glass design
-  system in `src/app/globals.css`. Login verified visually in light/dark and
-  mobile; other screens need a live DB to render.
+  system in `src/app/globals.css`. All screens verified against real data.
 - Auth with **invite-only signup**: first signup becomes company owner;
   later signups need a row in `company_invites` (by email), otherwise they
   land on a "waiting for invite" screen with no data access.
@@ -254,10 +256,14 @@ integrations, entry move/copy between books UI (server action
 ## Environment notes
 
 The project lives on an SMB network share (`/Volumes/BackUp`), which matters:
-- Turbopack's persistent cache cannot fsync there, so both `.next/cache`
-  (build) and `.next/dev/cache` (dev) are symlinks to local dirs. If `.next`
-  is ever deleted, recreate them:
-  `mkdir -p .next/dev && ln -sfn ~/.dot-cashbook-cache .next/cache && ln -sfn ~/.dot-cashbook-dev-cache .next/dev/cache`.
+- Turbopack's persistent cache cannot fsync there. `next.config.ts` turns
+  `experimental.turbopackFileSystemCacheForBuild/ForDev` off unless
+  `process.env.VERCEL` is set, so local builds skip the on-disk cache and
+  Vercel keeps it. (The old `.next/cache` symlink workaround is obsolete.)
+- macOS can leave SMB symlinks stale after a remount — `ls` says "Invalid
+  argument" and every `node_modules/.bin` shim breaks. Remount the share to
+  fix it; meanwhile run tools by real path, e.g.
+  `node node_modules/tsx/dist/cli.mjs tests/rules.test.mts`.
 - The preview tool's `npm run dev` hangs on this share; start the dev server
   with `node node_modules/next/dist/bin/next dev -p 3000` instead.
 - `node_modules` must be a real directory in the project (npm replaces a

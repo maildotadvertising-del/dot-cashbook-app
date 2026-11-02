@@ -2,6 +2,35 @@
 
 Dated log of decisions and progress. Newest entry on top.
 
+## 2026-11-02 (handoff package)
+
+- User wants to continue this work from a different Claude account, so
+  everything that lived outside the repo was written into it. Added
+  `HANDOFF.md`: accounts and URLs (GitHub, Vercel, Supabase project ref), the
+  four env var **names** and where the user gets each value, the SMB-share
+  environment gotchas, the code map, the migration / `setup-all.sql`
+  workflow, what is still unfinished, and the pre-commit verification
+  commands.
+- Copied the working rules out of local Claude memory (which does not travel
+  between accounts) into `HANDOFF.md`: Claude does every step itself; the
+  user only handles passwords/secrets, deletes and approvals; Claude never
+  types a secret anywhere; never echo secrets into chat; reply in Tanglish;
+  don't import the Wallet history; don't rotate the Supabase secret key
+  (rotation was offered and declined).
+- Fixed a stale line in CLAUDE.md that still said nothing had run against a
+  live Supabase project — it has been live since 2026-09-18 — and pointed
+  the top of the file at HANDOFF.md.
+- Dropped the `.next/cache` symlink workaround: `next.config.ts` now disables
+  `experimental.turbopackFileSystemCacheForBuild/ForDev` unless
+  `process.env.VERCEL` is set, so the build no longer tries to fsync on the
+  SMB share and Vercel keeps its cache. Verified with a clean
+  `rm -rf .next && next build`.
+- Hit a macOS SMB bug on this machine: after the share was remounted, every
+  symlink in `node_modules/.bin` went stale ("Invalid argument"), so `npm
+  test` and `npx tsc` cannot find their binaries until the share is
+  remounted. Ran the suite by real path instead — all four test files and
+  `tsc --noEmit` pass. Noted in CLAUDE.md and HANDOFF.md.
+
 ## 2026-09-18 (liquid glass polish)
 
 - User kept the colours but wanted a richer iPhone liquid-glass look, a more
